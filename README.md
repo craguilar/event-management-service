@@ -1,94 +1,127 @@
-Welcome to the AWS CodeStar sample web application
-==================================================
+# Event Management
 
 This sample code helps get you started with a simple Go web application deployed by AWS CloudFormation to AWS Lambda and Amazon API Gateway.
 
-What's Here
------------
+## What's Here?
 
 This sample includes:
 
 * README.md - this file
 * buildspec.yml - this file is used by AWS CodeBuild to package your
   application for deployment to AWS Lambda
-* main.go - this file contains the sample Go code for the web application
-* main_test.go - this file contains unit tests for the sample Go code
+* cmd - This directory contains go code that glues together our service implementation in internal , the code in this directory refers to execution especific implementation details of the service.
+* internal - This directory contains go code  which is NON public and contains implementation details we don't want to expose as a public API.
+* scripts - Yeah , these are scripts.
 * template.yml - this file contains the AWS Serverless Application Model (AWS SAM) used
   by AWS CloudFormation to deploy your application to AWS Lambda and Amazon API
   Gateway.
 * template-configuration.json - this file contains the project ARN with placeholders used for tagging resources with the project ID  
 
-Getting Started
----------------
+## Development
 
-These directions assume you want to develop on your development environment or a Cloud9 environment.
+### AWS Lambda execution
 
 To work on the sample code, you'll need to clone your project's repository to your
-local computer. If you haven't, do that first. You can find instructions in the
-AWS CodeStar user guide at https://docs.aws.amazon.com/codestar/latest/userguide/getting-started.html#clone-repo
-
+local computer. If you haven't, do that first , then:
 
 1. Install Go.  See https://golang.org/dl/ for details.
 
-2. Install your dependencies:
+1. Install your dependencies:
 
-          $ go get github.com/stretchr/testify/assert
-          $ go get github.com/aws/aws-lambda-go/lambda
-            
-3.  Install the SAM CLI. For details see 
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
+    ```bash
+    go mod init
+    ```
 
-4. Run the following command in your repository to build the main.go file.
+    or if already installed
 
-           $ GOARCH=amd64 GOOS=linux go build main.go
-           
-5.  Start the development server:
-            
-            $ sam local start-api -p 8080
+    ```bash
+    go mod tidy
+    ```
 
-6.  Open http://127.0.0.1:8080/ in a web browser to view your webapp. 
+1. Install the SAM CLI. For details see https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
 
-What Do I Do Next?
-------------------
+1. Run the following command in your repository to build the main.go file.
 
-If you have checked out a local copy of your repository you can start making
-changes to the sample code.  We suggest making a small change to main.go first,
-so you can see how changes pushed to your project's repository are automatically
-picked up by your project pipeline and deployed to AWS Lambda and Amazon API Gateway.
-(You can watch the pipeline progress on your AWS CodeStar project dashboard.)
-Once you've seen how that works, start developing your own code, and have fun!
+    ```bash
+    GOARCH=amd64 GOOS=linux go build -o main cmd/http/lambda/*.go
+    ```
 
-To run your test locally, go to the root directory of the sample code and
-run the `go test` command, which AWS CodeBuild also runs through your
-`buildspec.yml` file.
+1. Start the development server:
 
-To test your new code during the release process, modify the existing tests or
-add tests for any new packages you create. AWS CodeBuild will run the tests during
-the build stage of your project pipeline. You can find the test results in the
-AWS CodeBuild console.
+    ```bash
+    sam local start-api -p 8080
+    ```
 
-Learn more about AWS CodeBuild and how it builds and tests your application here:
-https://docs.aws.amazon.com/codebuild/latest/userguide/concepts.html
+1. Open http://127.0.0.1:8080/ in a web browser to view your webapp or execute
 
-Learn more about AWS Serverless Application Model (AWS SAM) and how it works here:
-https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md
+  ```bash
+  scripts/test-integration.sh
+  ```
 
-AWS Lambda Developer Guide:
-https://docs.aws.amazon.com/lambda/latest/dg/deploying-lambda-apps.html
+### Server mode
 
-Learn more about AWS CodeStar by reading the user guide, and post questions and
-comments about AWS CodeStar on our forum.
+Run server mode
 
-User Guide: https://docs.aws.amazon.com/codestar/latest/userguide/welcome.html
+```bash
+go run cmd/http/server/*.go
+```
 
-Forum: https://forums.aws.amazon.com/forum.jspa?forumID=248
+Then open http://127.0.0.1:8080/ in a web browser to view your webapp or execute
 
-What Should I Do Before Running My Project in Production?
-------------------
+  ```bash
+  scripts/test-integration.sh
+  ```
 
-AWS recommends you review the security best practices recommended by the framework
-author of your selected sample application before running it in production. You
-should also regularly review and apply any available patches or associated security
-advisories for dependencies used within your application.
+### Dynamo DB
 
-Best Practices: https://docs.aws.amazon.com/codestar/latest/userguide/best-practices.html?icmpid=docs_acs_rm_sec
+TODO: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html
+
+## Deployment
+
+Validate your Cloudformation template using below command:
+
+```bash
+aws cloudformation validate-template --template-body file://./template.yml
+```
+
+## Security
+
+Once deployed in AWS the Lambda is securde to ONLY be callable from IAM or trusted AWS Service , that means unless you have a trusted account in AWS you
+won't be able to call the Lambda.
+
+To enable non AWS IAM based Authentication/Authorization our Lambda integates with API Gateway where we have attached the Authorizer https://github.com/craguilar/demo-cars-lambda that will require a valid JWT token (in this case provided by Amazon Cognito) and pass this token to the AWS Gateway path as a query parameter named `token` .
+
+You can get a valid token using:
+
+```bash
+curl -X POST --user '${OAUTH_CLIENT_ID}:${OAUTH_CLIENT_SECRET}'  \
+ 'https://democars.auth.us-east-2.amazoncognito.com/oauth2/token?grant_type=client_credentials&scope=profile' \
+ -H 'Content-Type: application/x-www-form-urlencoded'
+```
+
+## Contributing
+
+### Format
+
+```bash
+gofmt -w -s .
+```
+
+### Vulnerability checking
+
+Requires Go version 1.18 - see https://go.dev/blog/vuln
+
+## ToDo
+
+1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
+1. Review Go Cloud https://github.com/google/go-cloud
+
+## References
+
+1. Directory structure mainly based on https://www.gobeyond.dev/packages-as-layers/ , https://www.gobeyond.dev/standard-package-layout/ and  https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091 . Other useful links:   : https://leonardqmarcq.com/posts/go-project-structure-for-api-gateway-lambda-with-aws-sam 
+1. Best practices for working with AWS Lambda functions - https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html
+1. AWS Lamdba Golang https://docs.aws.amazon.com/lambda/latest/dg/golang-handler.html
+1. AWS Lambda EnvVars https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
+1. https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/using-dynamodb-with-go-sdk.html
+1. https://github.com/go-playground/validator
+1. Using Viper as configuration framework https://github.com/spf13/viper/blob/master/viper.go

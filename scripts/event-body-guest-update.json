@@ -1,0 +1,8 @@
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "guestType": "INDIVIDUAL",
+  "email" : "john.doe@nowhere.com",
+  "phone" : "650-111-1111",
+  "numberOfSeats": 1
+}

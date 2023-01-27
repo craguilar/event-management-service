@@ -16,6 +16,9 @@ Parameters:
     Default: ''
 
 Globals:
+  Api:
+    # API Gateway regional endpoints
+    EndpointConfiguration: REGIONAL
   Function:
     AutoPublishAlias: live
     DeploymentPreference:
@@ -24,10 +27,10 @@ Globals:
       Role: !Ref CodeDeployRole
 
 Resources:
-  GetHelloWorld:
+  EventsApi:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'awscodestar-${ProjectId}-lambda-GetHelloWorld'
+      FunctionName: !Sub 'awscodestar-${ProjectId}-lambda-EventsApi'
       Handler: main
       Runtime: go1.x
       Role:
@@ -35,11 +38,12 @@ Resources:
         - LambdaExecutionRole
         - Arn
       Events:
-        GetEvent:
-          Type: Api
+        HttpApiEvent:
+          Type: HttpApi
           Properties:
-            Path: /
-            Method: get
+            TimeoutInMillis: 15000
+            PayloadFormatVersion: '1.0'
+            
   LambdaExecutionRole:
     Description: Creating service role in IAM for AWS Lambda
     Type: AWS::IAM::Role
