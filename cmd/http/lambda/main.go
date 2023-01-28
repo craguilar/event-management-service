@@ -16,13 +16,13 @@ import (
 var db *dynamo.DBConfig
 
 func init() {
-	log.Println("Initializing lambda")
+	log.Println("Initializing DynamoDB lambda")
 	if db == nil {
 
 		region := os.Getenv("AWS_REGION")
 		awsSession, err := session.NewSession(&aws.Config{
-			Region: aws.String(region)},
-		)
+			Region: aws.String(region),
+		})
 		if err != nil {
 			log.Fatalf("Error found %s", err)
 			return
@@ -34,7 +34,7 @@ func init() {
 
 func main() {
 	log.Printf("Lambda started")
-	// Create car service and provide it to handler
+	// Create service and provide it to handler
 	service := dynamo.NewEventService(db)
 	serviceHandler := appHttp.NewServiceHandler(service)
 	router := appHttp.NewRouter(serviceHandler)

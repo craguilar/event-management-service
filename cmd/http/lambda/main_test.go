@@ -51,7 +51,7 @@ func TesOptionstHandler(t *testing.T) {
 }
 
 func createMockHandler() *LambaHandler {
-	// Create car service and provide it to handler
+	// Create service and provide it to handler
 	eventService := mock.NewEventService()
 	handler := appHttp.NewServiceHandler(eventService)
 	router := appHttp.NewRouter(handler)

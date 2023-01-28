@@ -71,9 +71,7 @@ Resources:
               AttributeName: "entityType"
               KeyType: "HASH"
           Projection: 
-            NonKeyAttributes: 
-              - "id"
-            ProjectionType: "INCLUDE"
+            ProjectionType: "ALL"
 
   LambdaExecutionRole:
     Description: Creating service role in IAM for AWS Lambda

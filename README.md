@@ -81,13 +81,23 @@ aws dynamodb create-table --endpoint-url http://localhost:8000 \
 	--table-name events --billing-mode PAY_PER_REQUEST \
 	--attribute-definitions \
 	AttributeName=id,AttributeType=S \
-	AttributeName=entityType,AttributeType=N \
+	AttributeName=entityType,AttributeType=S \
 	--key-schema \
 	AttributeName=id,KeyType=HASH \
 	AttributeName=entityType,KeyType=RANGE \
 	--global-secondary-indexes \
 	"[{\"IndexName\": \"ownerIdx\",\"KeySchema\":[{\"AttributeName\":\"entityType\",\"KeyType\":\"HASH\"}], \
-        \"Projection\":{\"NonKeyAttributes\": [\"AttributeName\",\"id\"],\"ProjectionType\":\"INCLUDE\"}}]"
+        \"Projection\":{\"ProjectionType\":\"ALL\"}}]"
+```
+
+```bash
+aws dynamodb describe-table --table-name events --endpoint-url http://localhost:800
+```
+
+Check
+
+```bash
+aws dynamodb scan --table-name events --endpoint-url http://localhost:8000
 ```
 
 ## Deployment
@@ -128,7 +138,6 @@ Requires Go version 1.18 - see https://go.dev/blog/vuln
 ## ToDo
 
 1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
-1. Review Go Cloud https://github.com/google/go-cloud
 
 ## References
 

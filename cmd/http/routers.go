@@ -1,9 +1,11 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -104,7 +106,34 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func SetupGlobalMiddleware(handler http.Handler, name string) http.Handler {
-	return LoggerMiddleWare(JsonContentTypeMiddleWare(Cors(handler)), name)
+	return LoggerMiddleWare(JsonContentTypeMiddleWare(Authorization(Cors(handler))), name)
+}
+
+func Cors(inner http.Handler) http.Handler {
+	// Where ORIGIN_ALLOWED is like `scheme://dns[:port]`, or `*` (insecure)
+	headersOk := handlers.AllowedHeaders([]string{"*"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"*"})
+
+	return handlers.CORS(originsOk, headersOk, methodsOk)(inner)
+}
+
+// Authorization
+func Authorization(inner http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Dangerous check  , but for now let's go with it.
+		awsSamLocal := os.Getenv("AWS_SAM_LOCAL")
+		if awsSamLocal == "" || awsSamLocal == "true" {
+			r.Header.Set("Authorization", "dummy")
+		}
+		authorization := r.Header.Get("Authorization")
+		if authorization == "" {
+			WriteError(w, 401, errors.New("authorization header not set "))
+			return
+		}
+
+		inner.ServeHTTP(w, r)
+	})
 }
 
 // Set application/json for all Responses in this Server
@@ -132,13 +161,4 @@ func LoggerMiddleWare(inner http.Handler, name string) http.Handler {
 			time.Since(start),
 		)
 	})
-}
-
-func Cors(inner http.Handler) http.Handler {
-	// Where ORIGIN_ALLOWED is like `scheme://dns[:port]`, or `*` (insecure)
-	headersOk := handlers.AllowedHeaders([]string{"*"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"*"})
-
-	return handlers.CORS(originsOk, headersOk, methodsOk)(inner)
 }

@@ -1,11 +1,8 @@
 package mock
 
 import (
-	"crypto/md5"
 	"errors"
-	"fmt"
 	"log"
-	"strings"
 	"sync"
 	"time"
 
@@ -59,14 +56,10 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 		return nil, err
 	}
 	// If Id is nil populate it
-
 	if u.Id == "" {
-		data := []byte(strings.ToUpper(u.FirstName + u.LastName))
-		u.Id = fmt.Sprintf("%x", md5.Sum(data))
-		if err != nil {
-			return nil, err
-		}
+		u.Id = app.GenerateId(u.FirstName + u.LastName)
 	}
+
 	event, err := c.eventService.Get(eventId)
 	if err != nil {
 		return nil, err

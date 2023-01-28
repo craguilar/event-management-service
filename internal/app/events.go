@@ -1,6 +1,9 @@
 package app
 
 import (
+	"crypto/md5"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -12,8 +15,8 @@ import (
 // Interface for Event service
 type EventService interface {
 	Get(id string) (*Event, error)
-	List(user string) ([]*EventSummary, error)
-	CreateOrUpdate(u *Event) (*Event, error)
+	List(eventManager string) ([]*EventSummary, error)
+	CreateOrUpdate(eventManager string, u *Event) (*Event, error)
 	Delete(id string) error
 }
 
@@ -24,13 +27,7 @@ type GuestService interface {
 	Delete(eventId, id string) error
 }
 
-type LocationService interface {
-	Get(eventId, id string) (*Location, error)
-	List(eventId string) ([]*Location, error)
-	CreateOrUpdate(u *Location) (*Location, error)
-	Delete(eventId, id string) error
-}
-
+/*
 type TaskService interface {
 	Get(eventId, id string) (*Guest, error)
 	List(eventId string) ([]*Guest, error)
@@ -45,13 +42,13 @@ type ExpenseService interface {
 	Delete(eventId, id string) error
 }
 
-type EventSummary struct {
-	Id            string    `json:"id" validate:"required"`
-	Name          string    `json:"name" validate:"required"`
-	MainLocation  string    `json:"mainLocation" validate:"required"`
-	EventDay      time.Time `json:"eventDay" validate:"required"`
-	TimeCreatedOn time.Time `json:"timeCreatedOn"`
+type LocationService interface {
+	Get(eventId, id string) (*Location, error)
+	List(eventId string) ([]*Location, error)
+	CreateOrUpdate(u *Location) (*Location, error)
+	Delete(eventId, id string) error
 }
+*/
 
 // Event : Required Name , MainLocation, EventDay
 type Event struct {
@@ -69,6 +66,19 @@ type Event struct {
 	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
 }
 
+type EventSummary struct {
+	Id            string    `json:"id" validate:"required"`
+	Name          string    `json:"name" validate:"required"`
+	MainLocation  string    `json:"mainLocation" validate:"required"`
+	EventDay      time.Time `json:"eventDay" validate:"required"`
+	TimeCreatedOn time.Time `json:"timeCreatedOn"`
+}
+
+type EventOwner struct {
+	OwnerEmail   string `json:"ownerEmail" validate:"required"`
+	EventSummary *EventSummary
+}
+
 // Guest : Required FirstName,LastName,Tentative,NumberOfSeats
 type Guest struct {
 	Id            string `json:"id"`
@@ -81,16 +91,6 @@ type Guest struct {
 	Country       string `json:"country"`
 	State         string `json:"state"`
 	NumberOfSeats int    `json:"numberOfSeats" validate:"required"`
-	v             *validator.Validate
-	TimeCreatedOn time.Time `json:"timeCreatedOn"`
-	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
-}
-
-type Location struct {
-	Id            uuid.UUID `json:"id" validate:"required"`
-	Name          string    `json:"name"`
-	Where         string    `json:"where" validate:"required"`
-	When          time.Time `json:"when" validate:"required"`
 	v             *validator.Validate
 	TimeCreatedOn time.Time `json:"timeCreatedOn"`
 	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
@@ -111,6 +111,16 @@ type Task struct {
 	Id            uuid.UUID `json:"id" validate:"required"`
 	Name          string    `json:"name" validate:"required"`
 	Status        string    `json:"status" validate:"required"` // PENDING, DONE
+	v             *validator.Validate
+	TimeCreatedOn time.Time `json:"timeCreatedOn"`
+	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
+}
+
+type Location struct {
+	Id            uuid.UUID `json:"id" validate:"required"`
+	Name          string    `json:"name"`
+	Where         string    `json:"where" validate:"required"`
+	When          time.Time `json:"when" validate:"required"`
 	v             *validator.Validate
 	TimeCreatedOn time.Time `json:"timeCreatedOn"`
 	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
@@ -149,4 +159,9 @@ func (g *Guest) Validate() error {
 		g.v = validator.New()
 	}
 	return g.v.Struct(g)
+}
+
+func GenerateId(value string) string {
+	data := []byte(strings.ToUpper(value))
+	return fmt.Sprintf("%x", md5.Sum(data))
 }

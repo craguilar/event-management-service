@@ -11,7 +11,7 @@ func TestList(t *testing.T) {
 	eventService := NewEventService()
 
 	event := &app.Event{Name: "My Birthday", MainLocation: "Golden Gate Park", EventDay: time.Now()}
-	event, err := eventService.CreateOrUpdate(event)
+	event, err := eventService.CreateOrUpdate("dummy", event)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}
@@ -38,7 +38,7 @@ func TestGuestCreation(t *testing.T) {
 	eventService := NewEventService()
 
 	event := &app.Event{Name: "My Birthday", MainLocation: "Golden Gate Park", EventDay: time.Now()}
-	event, err := eventService.CreateOrUpdate(event)
+	event, err := eventService.CreateOrUpdate("dummy", event)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}
@@ -63,7 +63,7 @@ func TestGuestUpdate(t *testing.T) {
 	eventService := NewEventService()
 
 	event := &app.Event{Name: "My Birthday", MainLocation: "Golden Gate Park", EventDay: time.Now()}
-	event, err := eventService.CreateOrUpdate(event)
+	event, err := eventService.CreateOrUpdate("dummy", event)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}
@@ -91,7 +91,7 @@ func TestDelete(t *testing.T) {
 	eventService := NewEventService()
 
 	event := &app.Event{Name: "My Birthday", MainLocation: "Golden Gate Park", EventDay: time.Now()}
-	event, err := eventService.CreateOrUpdate(event)
+	event, err := eventService.CreateOrUpdate("dummy", event)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}

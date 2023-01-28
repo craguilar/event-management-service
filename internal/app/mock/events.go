@@ -1,11 +1,8 @@
 package mock
 
 import (
-	"crypto/md5"
 	"errors"
-	"fmt"
 	"log"
-	"strings"
 	"sync"
 	"time"
 
@@ -45,7 +42,7 @@ func (c *EventService) List(user string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
-func (c *EventService) CreateOrUpdate(u *app.Event) (*app.Event, error) {
+func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.Event, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -55,11 +52,7 @@ func (c *EventService) CreateOrUpdate(u *app.Event) (*app.Event, error) {
 	}
 	// If Id is nil populate it
 	if u.Id == "" {
-		data := []byte(strings.ToUpper(u.Name))
-		u.Id = fmt.Sprintf("%x", md5.Sum(data))
-		if err != nil {
-			return nil, err
-		}
+		u.Id = app.GenerateId(u.Name)
 	}
 	_, exists := c.db[u.Id]
 	if !exists {
