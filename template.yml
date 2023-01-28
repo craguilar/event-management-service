@@ -71,9 +71,6 @@ Resources:
             - 
               AttributeName: "entityType"
               KeyType: "HASH"
-            - 
-              AttributeName: "id"
-              KeyType: "RANGE"
           Projection: 
             NonKeyAttributes: 
               - "id"

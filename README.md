@@ -60,7 +60,7 @@ local computer. If you haven't, do that first , then:
 
 ### Server mode
 
-Run server mode
+Run server mode using mock:
 
 ```bash
 go run cmd/http/server/*.go
@@ -74,7 +74,21 @@ Then open http://127.0.0.1:8080/ in a web browser to view your webapp or execute
 
 ### Dynamo DB
 
-TODO: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html
+Download Dynamo DB from  https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html
+
+```bash
+aws dynamodb create-table --endpoint-url http://localhost:8000 \
+	--table-name events --billing-mode PAY_PER_REQUEST \
+	--attribute-definitions \
+	AttributeName=id,AttributeType=S \
+	AttributeName=entityType,AttributeType=N \
+	--key-schema \
+	AttributeName=id,KeyType=HASH \
+	AttributeName=entityType,KeyType=RANGE \
+	--global-secondary-indexes \
+	"[{\"IndexName\": \"ownerIdx\",\"KeySchema\":[{\"AttributeName\":\"entityType\",\"KeyType\":\"HASH\"}], \
+        \"Projection\":{\"NonKeyAttributes\": [\"AttributeName\",\"id\"],\"ProjectionType\":\"INCLUDE\"}}]"
+```
 
 ## Deployment
 
