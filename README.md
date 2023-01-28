@@ -90,11 +90,13 @@ aws dynamodb create-table --endpoint-url http://localhost:8000 \
         \"Projection\":{\"ProjectionType\":\"ALL\"}}]"
 ```
 
+Check the table exists:
+
 ```bash
 aws dynamodb describe-table --table-name events --endpoint-url http://localhost:800
 ```
 
-Check
+And validate table estructure
 
 ```bash
 aws dynamodb scan --table-name events --endpoint-url http://localhost:8000

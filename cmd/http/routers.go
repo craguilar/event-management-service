@@ -122,8 +122,8 @@ func Cors(inner http.Handler) http.Handler {
 func Authorization(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Dangerous check  , but for now let's go with it.
-		awsSamLocal := os.Getenv("AWS_SAM_LOCAL")
-		if awsSamLocal == "" || awsSamLocal == "true" {
+		lambdaTaskRoot := os.Getenv("LAMBDA_TASK_ROOT")
+		if lambdaTaskRoot == "" {
 			r.Header.Set("Authorization", "dummy")
 		}
 		authorization := r.Header.Get("Authorization")
