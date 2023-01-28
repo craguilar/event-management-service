@@ -4,10 +4,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
+	appHttp "github.com/craguilar/event-management-service/cmd/http"
 	"github.com/craguilar/event-management-service/internal/app/dynamo"
 )
 
@@ -33,12 +35,10 @@ func init() {
 func main() {
 	log.Printf("Lambda started")
 	// Create car service and provide it to handler
-	/*
-		carService := dynamo.NewCarService(db)
-		carHandler := appHttp.NewCarServiceHandler(carService)
-		router := appHttp.NewRouter(carHandler)
-		handler := NewLambaHandler(router)
-		// Start lambda
-		lambda.Start(handler.Handler)
-	*/
+	service := dynamo.NewEventService(db)
+	serviceHandler := appHttp.NewServiceHandler(service)
+	router := appHttp.NewRouter(serviceHandler)
+	handler := NewLambaHandler(router)
+	// Start lambda
+	lambda.Start(handler.Handler)
 }
