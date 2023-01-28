@@ -44,7 +44,6 @@ Resources:
             TimeoutInMillis: 15000
             PayloadFormatVersion: '1.0'
 
-# For access pattern what I can do is 
   EventsTable:
     Type: AWS::DynamoDB::Table
     Properties:

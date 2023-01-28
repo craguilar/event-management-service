@@ -12,7 +12,7 @@ import (
 // Interface for Event service
 type EventService interface {
 	Get(id string) (*Event, error)
-	List() ([]*EventSummary, error)
+	List(user string) ([]*EventSummary, error)
 	CreateOrUpdate(u *Event) (*Event, error)
 	Delete(id string) error
 }

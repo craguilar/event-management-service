@@ -66,13 +66,14 @@ func (c *EventServiceHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *EventServiceHandler) ListEvent(w http.ResponseWriter, r *http.Request) {
-	cars, err := c.eventService.List()
+	// TODO
+	events, err := c.eventService.List("dummy")
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(SerializeData(cars))
+	w.Write(SerializeData(events))
 }
 
 func (c *EventServiceHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {

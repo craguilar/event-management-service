@@ -34,7 +34,7 @@ func (c *EventService) Get(id string) (*app.Event, error) {
 	return value, nil
 }
 
-func (c *EventService) List() ([]*app.EventSummary, error) {
+func (c *EventService) List(user string) ([]*app.EventSummary, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
