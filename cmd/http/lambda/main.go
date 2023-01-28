@@ -27,7 +27,7 @@ func init() {
 			log.Fatalf("Error found %s", err)
 			return
 		}
-		db = dynamo.InitDb(dynamodb.New(awsSession), "cars")
+		db = dynamo.InitDb(dynamodb.New(awsSession), "events")
 	}
 	log.Println("Initialized lambda ", db.DbService.Endpoint)
 }
