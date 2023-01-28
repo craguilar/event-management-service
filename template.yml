@@ -44,6 +44,7 @@ Resources:
             TimeoutInMillis: 15000
             PayloadFormatVersion: '1.0'
 
+# For access pattern what I can do is 
   EventsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -63,6 +64,20 @@ Resources:
         - 
           AttributeName: "entityType"
           KeyType: RANGE
+      GlobalSecondaryIndexes: 
+        - 
+          IndexName: "ownerIdx"
+          KeySchema: 
+            - 
+              AttributeName: "entityType"
+              KeyType: "HASH"
+            - 
+              AttributeName: "id"
+              KeyType: "RANGE"
+          Projection: 
+            NonKeyAttributes: 
+              - "id"
+            ProjectionType: "INCLUDE"
 
   LambdaExecutionRole:
     Description: Creating service role in IAM for AWS Lambda
