@@ -60,7 +60,7 @@ func (c *EventService) Get(id string) (*app.Event, error) {
 	if event.Id == "" {
 		return nil, nil
 	}
-	log.Printf("Return car %s", event)
+	log.Printf("Return car %v", event)
 	return event, nil
 }
 
