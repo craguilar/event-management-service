@@ -43,7 +43,27 @@ Resources:
           Properties:
             TimeoutInMillis: 15000
             PayloadFormatVersion: '1.0'
-            
+
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: events
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - 
+          AttributeName: "id"
+          AttributeType: "S"
+        - 
+          AttributeName: "entityType"
+          AttributeType: "S"
+      KeySchema:
+        - 
+          AttributeName: "id"
+          KeyType: HASH
+        - 
+          AttributeName: "entityType"
+          KeyType: RANGE
+
   LambdaExecutionRole:
     Description: Creating service role in IAM for AWS Lambda
     Type: AWS::IAM::Role
@@ -56,6 +76,24 @@ Resources:
             Service: [lambda.amazonaws.com]
           Action: sts:AssumeRole
       Path: /
+      Policies: 
+        - PolicyName: LambdaDynamoExecution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:BatchGetItem'
+                  - 'dynamodb:BatchWriteItem'
+                  - 'dynamodb:ConditionCheckItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:DescribeTable'
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:UpdateItem'
+                Resource: '*'
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
       PermissionsBoundary: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/CodeStar_${ProjectId}_PermissionsBoundary'
