@@ -225,12 +225,9 @@ func getUser(r *http.Request) (string, error) {
 	parser := new(jwt.Parser)
 	tokenString := authDetails[1]
 	claims := jwt.MapClaims{}
-	token, _, err := parser.ParseUnverified(tokenString, claims)
+	_, _, err := parser.ParseUnverified(tokenString, claims)
 	if err != nil {
 		return "", err
-	}
-	if !token.Valid {
-		return "", errors.New("invalid token " + tokenString)
 	}
 	return claims["username"].(string), nil
 }
