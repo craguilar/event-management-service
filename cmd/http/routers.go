@@ -122,9 +122,8 @@ func Cors(inner http.Handler) http.Handler {
 func Authorization(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Dangerous check  , but for now let's go with it.
-		lambdaTaskRoot := os.Getenv("LAMBDA_TASK_ROOT")
-		if lambdaTaskRoot == "" {
-			r.Header.Set("Authorization", "dummy")
+		if IsLocal() {
+			r.Header.Set("Authorization", "Bearer dummy")
 		}
 		authorization := r.Header.Get("Authorization")
 		if authorization == "" {
@@ -161,4 +160,9 @@ func LoggerMiddleWare(inner http.Handler, name string) http.Handler {
 			time.Since(start),
 		)
 	})
+}
+
+func IsLocal() bool {
+	lambdaTaskRoot := os.Getenv("LAMBDA_TASK_ROOT")
+	return lambdaTaskRoot == ""
 }

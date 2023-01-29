@@ -7,6 +7,7 @@ import (
 
 	"errors"
 
+	"github.com/golang-jwt/jwt/v4"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/craguilar/event-management-service/internal/app"
@@ -214,8 +215,22 @@ func (c *EventServiceHandler) DeleteGuest(w http.ResponseWriter, r *http.Request
 func getUser(r *http.Request) (string, error) {
 	authorization := r.Header.Get("Authorization")
 	authDetails := strings.Split(authorization, " ")
-	if len(authDetails) == 0 {
+	if len(authDetails) < 2 {
 		return "", errors.New("invalid authorization info")
 	}
-	return authDetails[0], nil
+	// Handle the use case of local testing
+	if IsLocal() && strings.HasPrefix(authDetails[1], "dummy") {
+		return "dummy", nil
+	}
+	parser := new(jwt.Parser)
+	tokenString := authDetails[1]
+	claims := jwt.MapClaims{}
+	token, _, err := parser.ParseUnverified(tokenString, claims)
+	if err != nil {
+		return "", err
+	}
+	if !token.Valid {
+		return "", errors.New("invalid token")
+	}
+	return claims["username"].(string), nil
 }
