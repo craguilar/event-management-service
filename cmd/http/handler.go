@@ -11,7 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/craguilar/event-management-service/internal/app"
-	"github.com/craguilar/event-management-service/internal/app/mock"
 	"github.com/gorilla/mux"
 )
 
@@ -20,11 +19,10 @@ type EventServiceHandler struct {
 	guestService app.GuestService
 }
 
-// TODO : Review injection points here
-func NewServiceHandler(service app.EventService) *EventServiceHandler {
+func NewServiceHandler(event app.EventService, guest app.GuestService) *EventServiceHandler {
 	return &EventServiceHandler{
-		eventService: service,
-		guestService: mock.NewGuestService(service),
+		eventService: event,
+		guestService: guest,
 	}
 }
 
@@ -120,7 +118,7 @@ func (c *EventServiceHandler) AddGuest(w http.ResponseWriter, r *http.Request) {
 	var guest app.Guest
 	eventId := r.URL.Query().Get("eventId")
 	if eventId == "" {
-		log.Warn("Expectde eventId")
+		log.Warn("Expected eventId")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(SerializeError(http.StatusBadRequest, "Expectde eventId as query parameter"))
 		return

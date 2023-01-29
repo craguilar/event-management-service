@@ -1,43 +1,18 @@
 package dynamo
 
 import (
-	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 
 	"github.com/craguilar/event-management-service/internal/app"
 )
 
-type DBConfig struct {
-	DbService *dynamodb.DynamoDB
-	TableName string
-}
-
-func InitDb(db *dynamodb.DynamoDB, tableName string) *DBConfig {
-	return &DBConfig{
-		DbService: db,
-		TableName: tableName,
-	}
-}
-
-func InitLocalDb(overrideUrl, tableName string) *DBConfig {
-
-	awsSession, err := session.NewSession(&aws.Config{
-		Region:      aws.String("dummy"),
-		Endpoint:    aws.String(overrideUrl),
-		Credentials: credentials.NewStaticCredentials("AKID", "SECRET_KEY", "TOKEN"),
-	})
-	if err != nil {
-		log.Fatalf("Error found %s", err)
-	}
-	return InitDb(dynamodb.New(awsSession), tableName)
-}
+const _SORT_KEY_EVENT_PREFIX = "EVENT-"
+const _SORT_KEY_OWNER_PREFIX = "OWNER-"
 
 // EventService represents a Dynamo DB implementation of internal.EventService.
 type EventService struct {
@@ -54,11 +29,11 @@ func (c *EventService) Get(id string) (*app.Event, error) {
 
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"id": {
+			c.db.PK_ID: {
 				S: aws.String(id),
 			},
-			"entityType": {
-				S: aws.String("EVENT-" + id),
+			c.db.SORT_KEY: {
+				S: aws.String(_SORT_KEY_EVENT_PREFIX + id),
 			},
 		},
 		TableName: &c.db.TableName,
@@ -87,13 +62,13 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 	log.Printf("Getting all events for %s", userName)
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
-		IndexName: aws.String("ownerIdx"),
+		IndexName: aws.String(c.db.GSI_OWNER),
 		KeyConditions: map[string]*dynamodb.Condition{
-			"entityType": {
+			c.db.SORT_KEY: {
 				ComparisonOperator: aws.String("EQ"),
 				AttributeValueList: []*dynamodb.AttributeValue{
 					{
-						S: aws.String("OWNER-" + userName),
+						S: aws.String(_SORT_KEY_OWNER_PREFIX + userName),
 					},
 				},
 			},
@@ -142,15 +117,15 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 		return nil, err
 	}
 	// Assign dynamo db key
-	aEvent["id"] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
-	aEvent["entityType"] = &dynamodb.AttributeValue{S: aws.String("EVENT-" + u.Id)}
+	aEvent[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
+	aEvent[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_EVENT_PREFIX + u.Id)}
 
 	aOwner, err := dynamodbattribute.MarshalMap(eventOwner(eventManager, u))
 	if err != nil {
 		return nil, err
 	}
-	aOwner["id"] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
-	aOwner["entityType"] = &dynamodb.AttributeValue{S: aws.String("OWNER-" + eventManager)}
+	aOwner[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
+	aOwner[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_OWNER_PREFIX + eventManager)}
 
 	transactions := &dynamodb.TransactWriteItemsInput{
 		TransactItems: []*dynamodb.TransactWriteItem{
@@ -179,7 +154,25 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 }
 
 func (c *EventService) Delete(id string) error {
-	return errors.New("not implemented")
+
+	input := &dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			c.db.PK_ID: {
+				S: aws.String(id),
+			},
+			c.db.SORT_KEY: {
+				S: aws.String(_SORT_KEY_EVENT_PREFIX + id),
+			},
+		},
+		TableName: &c.db.TableName,
+	}
+
+	_, err := c.db.DbService.DeleteItem(input)
+	if err != nil {
+		log.Printf("Got error calling DeetItem:")
+		return err
+	}
+	return nil
 }
 
 func eventOwner(userName string, event *app.Event) *app.EventOwner {

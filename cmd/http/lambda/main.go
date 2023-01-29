@@ -35,10 +35,13 @@ func init() {
 func main() {
 	log.Printf("Lambda started")
 	// Create service and provide it to handler
-	service := dynamo.NewEventService(db)
-	serviceHandler := appHttp.NewServiceHandler(service)
-	router := appHttp.NewRouter(serviceHandler)
-	handler := NewLambaHandler(router)
+	// Create services and provide it to handler
+	event := dynamo.NewEventService(db)
+	guest := dynamo.NewGuestService(db)
+	handler := appHttp.NewServiceHandler(event, guest)
+	// Router and Lambda Handler
+	router := appHttp.NewRouter(handler)
+	lambdHandler := NewLambaHandler(router)
 	// Start lambda
-	lambda.Start(handler.Handler)
+	lambda.Start(lambdHandler.Handler)
 }
