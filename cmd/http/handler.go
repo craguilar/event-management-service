@@ -32,7 +32,7 @@ func (c *EventServiceHandler) AddEvent(w http.ResponseWriter, r *http.Request) {
 	// Check associated user
 	user, err := getUser(r)
 	if err != nil {
-		log.Warn("Error when decoding Authorization", err)
+		log.Warn("Error when decoding Authorization ", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
 		return
@@ -83,7 +83,7 @@ func (c *EventServiceHandler) ListEvent(w http.ResponseWriter, r *http.Request) 
 	// Check associated user
 	user, err := getUser(r)
 	if err != nil {
-		log.Warn("Error when decoding Authorization", err)
+		log.Warn("Error when decoding Authorization ", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
 		return
@@ -230,7 +230,7 @@ func getUser(r *http.Request) (string, error) {
 		return "", err
 	}
 	if !token.Valid {
-		return "", errors.New("invalid token")
+		return "", errors.New("invalid token " + tokenString)
 	}
 	return claims["username"].(string), nil
 }
