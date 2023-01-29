@@ -13,9 +13,11 @@ import (
 func main() {
 	log.Printf("Server started on port %s", cmd.GetConfig("PORT"))
 
-	// Create car service and provide it to handler
-	eventService := mock.NewEventService()
-	handler := appHttp.NewServiceHandler(eventService)
+	// Create services and provide it to handler
+	event := mock.NewEventService()
+	guest := mock.NewGuestService(event)
+	handler := appHttp.NewServiceHandler(event, guest)
+	// Router config
 	router := appHttp.NewRouter(handler)
 
 	// Start server
