@@ -20,6 +20,9 @@ type EventService struct {
 }
 
 func NewEventService(db *DBConfig) *EventService {
+	if db == nil {
+		log.Panicf("Null reference to db config in EventService")
+	}
 	return &EventService{
 		db: db,
 	}
@@ -59,7 +62,6 @@ func (c *EventService) Get(id string) (*app.Event, error) {
 
 func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 
-	log.Printf("Getting all events for %s", userName)
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
 		IndexName: aws.String(c.db.GSI_OWNER),
@@ -169,14 +171,15 @@ func (c *EventService) Delete(id string) error {
 			},
 		},
 	}
+
 	result, err := c.db.DbService.Query(queryInput)
 	if err != nil {
 		log.Printf("Error when querying by HASH key - %s", err)
 		return err
 	}
+
 	transactions := []*dynamodb.TransactWriteItem{}
 	for _, value := range result.Items {
-
 		transactions = append(transactions, &dynamodb.TransactWriteItem{
 			Delete: &dynamodb.Delete{
 				Key: map[string]*dynamodb.AttributeValue{
@@ -184,7 +187,7 @@ func (c *EventService) Delete(id string) error {
 						S: aws.String(id),
 					},
 					c.db.SORT_KEY: {
-						S: aws.String(value[c.db.SORT_KEY].String()),
+						S: aws.String(*value[c.db.SORT_KEY].S),
 					},
 				},
 				TableName: &c.db.TableName,

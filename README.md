@@ -139,6 +139,7 @@ Requires Go version 1.18 - see https://go.dev/blog/vuln
 
 ## ToDo
 
+1. Reduce number of calls made for OPTIONS in API Gateway.
 1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
 
 ## References
