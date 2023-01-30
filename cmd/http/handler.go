@@ -189,7 +189,7 @@ func (c *EventServiceHandler) ListGuest(w http.ResponseWriter, r *http.Request) 
 func (c *EventServiceHandler) DeleteGuest(w http.ResponseWriter, r *http.Request) {
 	eventId := r.URL.Query().Get("eventId")
 	if eventId == "" {
-		log.Warn("Expectde eventId")
+		log.Warn("Expected eventId")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(SerializeError(http.StatusBadRequest, "Expectde eventId as query parameter"))
 		return

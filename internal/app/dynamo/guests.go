@@ -30,7 +30,7 @@ func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
 				S: aws.String(eventId),
 			},
 			"entityType": {
-				S: aws.String(_SORT_KEY_GUEST_PREFIX + id),
+				S: aws.String(id),
 			},
 		},
 		TableName: &c.db.TableName,
@@ -82,14 +82,17 @@ func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 	if err != nil {
 		return nil, err
 	}
-	items := new([]app.Guest)
-	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, items)
-	if err != nil {
-		return nil, err
-	}
+	// Given we use a single table model until here result.Items contains ALL the same duplicated Id :)
+	//err = dynamodbattribute.UnmarshalListOfMaps(result.Items, items)
 	list := []*app.Guest{}
-	for _, value := range *items {
-		list = append(list, &value)
+	for _, value := range result.Items {
+		guest := &app.Guest{}
+		err = dynamodbattribute.UnmarshalMap(value, guest)
+		if err != nil {
+			return nil, err
+		}
+		guest.Id = *aws.String(*value[c.db.SORT_KEY].S)
+		list = append(list, guest)
 	}
 	return list, nil
 }
@@ -120,7 +123,7 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 		return nil, err
 	}
 	// Assign dynamo db key
-	aGuest[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
+	aGuest[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
 	aGuest[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_GUEST_PREFIX + u.Id)}
 	input := &dynamodb.PutItemInput{
 		Item:      aGuest,
@@ -142,7 +145,7 @@ func (c *GuestService) Delete(eventId, id string) error {
 				S: aws.String(eventId),
 			},
 			c.db.SORT_KEY: {
-				S: aws.String(_SORT_KEY_GUEST_PREFIX + id),
+				S: aws.String(id),
 			},
 		},
 		TableName: &c.db.TableName,
