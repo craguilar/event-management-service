@@ -160,9 +160,6 @@ func (c *EventService) Delete(id string) error {
 			c.db.PK_ID: {
 				S: aws.String(id),
 			},
-			c.db.SORT_KEY: {
-				S: aws.String(_SORT_KEY_EVENT_PREFIX + id),
-			},
 		},
 		TableName: &c.db.TableName,
 	}

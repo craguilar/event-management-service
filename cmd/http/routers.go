@@ -48,7 +48,7 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 			"DeleteEvents",
 			strings.ToUpper("Delete"),
 			BASE_PATH + "/events/{eventId}",
-			handler.ListEvent,
+			handler.DeleteEvent,
 		},
 		// Guests
 		{

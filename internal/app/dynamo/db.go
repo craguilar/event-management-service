@@ -27,6 +27,7 @@ func InitDb(db *dynamodb.DynamoDB, tableName string) *DBConfig {
 	}
 }
 
+// DO NOT USE IN PRODUCTION
 func InitLocalDb(overrideUrl, tableName string) *DBConfig {
 
 	awsSession, err := session.NewSession(&aws.Config{
