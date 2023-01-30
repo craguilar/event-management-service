@@ -155,18 +155,50 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 
 func (c *EventService) Delete(id string) error {
 
-	input := &dynamodb.DeleteItemInput{
-		Key: map[string]*dynamodb.AttributeValue{
+	// Get ALL associated elements
+	var queryInput = &dynamodb.QueryInput{
+		TableName: aws.String(c.db.TableName),
+		KeyConditions: map[string]*dynamodb.Condition{
 			c.db.PK_ID: {
-				S: aws.String(id),
+				ComparisonOperator: aws.String("EQ"),
+				AttributeValueList: []*dynamodb.AttributeValue{
+					{
+						S: aws.String(id),
+					},
+				},
 			},
 		},
-		TableName: &c.db.TableName,
+	}
+	result, err := c.db.DbService.Query(queryInput)
+	if err != nil {
+		log.Printf("Error when querying by HASH key - %s", err)
+		return err
+	}
+	transactions := []*dynamodb.TransactWriteItem{}
+	for _, value := range result.Items {
+
+		transactions = append(transactions, &dynamodb.TransactWriteItem{
+			Delete: &dynamodb.Delete{
+				Key: map[string]*dynamodb.AttributeValue{
+					c.db.PK_ID: {
+						S: aws.String(id),
+					},
+					c.db.SORT_KEY: {
+						S: aws.String(value[c.db.SORT_KEY].String()),
+					},
+				},
+				TableName: &c.db.TableName,
+			},
+		})
+
 	}
 
-	_, err := c.db.DbService.DeleteItem(input)
+	// Batch delete
+	transactWriteInput := &dynamodb.TransactWriteItemsInput{
+		TransactItems: transactions}
+	_, err = c.db.DbService.TransactWriteItems(transactWriteInput)
 	if err != nil {
-		log.Printf("Got error calling DeetItem:")
+		log.Printf("Got error calling Delete - %s", err)
 		return err
 	}
 	return nil
