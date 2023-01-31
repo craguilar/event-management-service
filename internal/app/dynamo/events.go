@@ -2,6 +2,7 @@ package dynamo
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -61,7 +62,7 @@ func (c *EventService) Get(id string) (*app.Event, error) {
 }
 
 func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
-
+	userName = strings.ToUpper(userName)
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
 		IndexName: aws.String(c.db.GSI_OWNER),
@@ -94,6 +95,7 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 }
 
 func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.Event, error) {
+	eventManager = strings.ToUpper(eventManager)
 	err := u.Validate()
 	if err != nil {
 		return nil, err

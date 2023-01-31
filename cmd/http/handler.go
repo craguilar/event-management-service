@@ -227,5 +227,5 @@ func getUser(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return claims["username"].(string), nil
+	return claims["email"].(string), nil
 }

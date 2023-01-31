@@ -102,6 +102,12 @@ And validate table estructure
 aws dynamodb scan --table-name events --endpoint-url http://localhost:8000
 ```
 
+Scan records
+
+```bash
+aws dynamodb scan --table-name events --endpoint-url http://localhost:8000
+```
+
 ## Deployment
 
 Validate your Cloudformation template using below command:
