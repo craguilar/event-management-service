@@ -97,7 +97,7 @@ type Guest struct {
 }
 
 type Task struct {
-	TaskId        string `json:"taskId"`
+	Id            string `json:"taskId"`
 	Name          string `json:"name" validate:"required"`
 	Status        string `json:"status" validate:"required"` // PENDING, DONE
 	v             *validator.Validate

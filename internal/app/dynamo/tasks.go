@@ -46,7 +46,7 @@ func (c *TaskService) Get(eventId, id string) (*app.Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	if task.TaskId == "" {
+	if task.Id == "" {
 		return nil, nil
 	}
 	log.Printf("Return %v", task)
@@ -89,7 +89,7 @@ func (c *TaskService) List(eventId string) ([]*app.Task, error) {
 		if err != nil {
 			return nil, err
 		}
-		task.TaskId = *aws.String(*value[c.db.SORT_KEY].S)
+		task.Id = *aws.String(*value[c.db.SORT_KEY].S)
 		list = append(list, task)
 	}
 	return list, nil
@@ -101,16 +101,16 @@ func (c *TaskService) CreateOrUpdate(eventId string, u *app.Task) (*app.Task, er
 		return nil, err
 	}
 	// If Id is nil populate it
-	if u.TaskId == "" {
-		u.TaskId, err = app.GenerateRandomId()
+	if u.Id == "" {
+		u.Id, err = app.GenerateRandomId()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	log.Printf("CreateOrUpdate guest with Id /%s", u.TaskId)
+	log.Printf("CreateOrUpdate guest with Id /%s", u.Id)
 
-	value, err := c.Get(eventId, u.TaskId)
+	value, err := c.Get(eventId, u.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (c *TaskService) CreateOrUpdate(eventId string, u *app.Task) (*app.Task, er
 	}
 	// Assign dynamo db key
 	aTask[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
-	aTask[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_TASK_PREFIX + u.TaskId)}
+	aTask[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_TASK_PREFIX + u.Id)}
 	input := &dynamodb.PutItemInput{
 		Item:      aTask,
 		TableName: &c.db.TableName,
@@ -135,7 +135,7 @@ func (c *TaskService) CreateOrUpdate(eventId string, u *app.Task) (*app.Task, er
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Creatde guest with Id %s", u.TaskId)
+	log.Printf("Creatde guest with Id %s", u.Id)
 	return u, nil
 }
 
