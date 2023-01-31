@@ -17,12 +17,14 @@ import (
 type EventServiceHandler struct {
 	eventService app.EventService
 	guestService app.GuestService
+	taskService  app.TaskService
 }
 
-func NewServiceHandler(event app.EventService, guest app.GuestService) *EventServiceHandler {
+func NewServiceHandler(event app.EventService, guest app.GuestService, task app.TaskService) *EventServiceHandler {
 	return &EventServiceHandler{
 		eventService: event,
 		guestService: guest,
+		taskService:  task,
 	}
 }
 
@@ -112,7 +114,104 @@ func (c *EventServiceHandler) DeleteEvent(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 }
 
-// Guests
+// Tasks
+
+func (c *EventServiceHandler) AddTask(w http.ResponseWriter, r *http.Request) {
+
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warn("Expected eventId")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expectde eventId as query parameter"))
+		return
+	}
+
+	var task app.Task
+	err := json.NewDecoder(r.Body).Decode(&task)
+	if err != nil {
+		log.Warn("Error when decoding Body", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Body parameter"))
+		return
+	}
+	createdTask, err := c.taskService.CreateOrUpdate(eventId, &task)
+	if err != nil {
+		log.Error("Error when creating task ", err)
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(createdTask))
+}
+
+func (c *EventServiceHandler) GetTask(w http.ResponseWriter, r *http.Request) {
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warn("Expected eventId")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
+		return
+	}
+	vars := mux.Vars(r)
+	taskId, ok := vars["taskId"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
+		return
+	}
+	task, err := c.taskService.Get(eventId, taskId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	if task == nil {
+		WriteError(w, http.StatusNotFound, nil)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(task))
+}
+
+func (c *EventServiceHandler) ListTask(w http.ResponseWriter, r *http.Request) {
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warnf("Expected eventId got %s", eventId)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
+		return
+	}
+	tasks, err := c.taskService.List(eventId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(tasks))
+}
+
+func (c *EventServiceHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warn("Expected eventId")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
+		return
+	}
+
+	vars := mux.Vars(r)
+	taskId, ok := vars["taskId"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
+		return
+	}
+	err := c.taskService.Delete(eventId, taskId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
 
 func (c *EventServiceHandler) AddGuest(w http.ResponseWriter, r *http.Request) {
 	var guest app.Guest

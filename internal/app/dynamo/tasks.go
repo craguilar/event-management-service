@@ -2,7 +2,6 @@ package dynamo
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,19 +10,19 @@ import (
 	"github.com/craguilar/event-management-service/internal/app"
 )
 
-const _SORT_KEY_GUEST_PREFIX = "GUEST-"
+const _SORT_KEY_TASK_PREFIX = "TASK-"
 
-type GuestService struct {
+type TaskService struct {
 	db *DBConfig
 }
 
-func NewGuestService(db *DBConfig) *GuestService {
-	return &GuestService{
+func NewTaskService(db *DBConfig) *TaskService {
+	return &TaskService{
 		db: db,
 	}
 }
 
-func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
+func (c *TaskService) Get(eventId, id string) (*app.Task, error) {
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			c.db.PK_ID: {
@@ -42,19 +41,19 @@ func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
 
 	}
 
-	event := &app.Guest{}
-	err = dynamodbattribute.UnmarshalMap(result.Item, event)
+	task := &app.Task{}
+	err = dynamodbattribute.UnmarshalMap(result.Item, task)
 	if err != nil {
 		return nil, err
 	}
-	if event.Id == "" {
+	if task.TaskId == "" {
 		return nil, nil
 	}
-	log.Printf("Return %v", event)
-	return event, nil
+	log.Printf("Return %v", task)
+	return task, nil
 }
 
-func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
+func (c *TaskService) List(eventId string) ([]*app.Task, error) {
 	log.Printf("Getting all events for %s", eventId)
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
@@ -71,7 +70,7 @@ func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 				ComparisonOperator: aws.String("BEGINS_WITH"),
 				AttributeValueList: []*dynamodb.AttributeValue{
 					{
-						S: aws.String(_SORT_KEY_GUEST_PREFIX),
+						S: aws.String(_SORT_KEY_TASK_PREFIX),
 					},
 				},
 			},
@@ -83,32 +82,35 @@ func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 		return nil, err
 	}
 	// Given we use a single table model until here result.Items contains ALL the same duplicated Id :)
-	list := []*app.Guest{}
+	list := []*app.Task{}
 	for _, value := range result.Items {
-		guest := &app.Guest{}
-		err = dynamodbattribute.UnmarshalMap(value, guest)
+		task := &app.Task{}
+		err = dynamodbattribute.UnmarshalMap(value, task)
 		if err != nil {
 			return nil, err
 		}
-		guest.Id = *aws.String(*value[c.db.SORT_KEY].S)
-		list = append(list, guest)
+		task.TaskId = *aws.String(*value[c.db.SORT_KEY].S)
+		list = append(list, task)
 	}
 	return list, nil
 }
 
-func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest, error) {
+func (c *TaskService) CreateOrUpdate(eventId string, u *app.Task) (*app.Task, error) {
 	err := u.Validate()
 	if err != nil {
 		return nil, err
 	}
 	// If Id is nil populate it
-	if u.Id == "" {
-		u.Id = app.GenerateId(strings.ToUpper(u.FirstName + u.LastName))
+	if u.TaskId == "" {
+		u.TaskId, err = app.GenerateRandomId()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	log.Printf("CreateOrUpdate guest with Id /%s", u.Id)
+	log.Printf("CreateOrUpdate guest with Id /%s", u.TaskId)
 
-	value, err := c.Get(eventId, u.Id)
+	value, err := c.Get(eventId, u.TaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -117,15 +119,15 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 	}
 	// If it exists update the time stamp!
 	u.TimeUpdatedOn = time.Now()
-	aGuest, err := dynamodbattribute.MarshalMap(u)
+	aTask, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
 		return nil, err
 	}
 	// Assign dynamo db key
-	aGuest[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
-	aGuest[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_GUEST_PREFIX + u.Id)}
+	aTask[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
+	aTask[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_TASK_PREFIX + u.TaskId)}
 	input := &dynamodb.PutItemInput{
-		Item:      aGuest,
+		Item:      aTask,
 		TableName: &c.db.TableName,
 	}
 
@@ -133,11 +135,11 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Creatde guest with Id %s", u.Id)
+	log.Printf("Creatde guest with Id %s", u.TaskId)
 	return u, nil
 }
 
-func (c *GuestService) Delete(eventId, id string) error {
+func (c *TaskService) Delete(eventId, id string) error {
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			c.db.PK_ID: {
@@ -152,7 +154,7 @@ func (c *GuestService) Delete(eventId, id string) error {
 
 	_, err := c.db.DbService.DeleteItem(input)
 	if err != nil {
-		log.Printf("Got error calling DeetItem:")
+		log.Printf("Got error calling delete Item  %s ", err)
 		return err
 	}
 	return nil

@@ -50,11 +50,12 @@ func TesOptionstHandler(t *testing.T) {
 
 }
 
+// TODO : To fix this test
 func createMockHandler() *LambaHandler {
 	// Create service and provide it to handler
 	event := mock.NewEventService()
 	guest := mock.NewGuestService(event)
-	handler := appHttp.NewServiceHandler(event, guest)
+	handler := appHttp.NewServiceHandler(event, guest, nil)
 	router := appHttp.NewRouter(handler)
 	return NewLambaHandler(router)
 }

@@ -27,14 +27,14 @@ type GuestService interface {
 	Delete(eventId, id string) error
 }
 
-/*
 type TaskService interface {
-	Get(eventId, id string) (*Guest, error)
-	List(eventId string) ([]*Guest, error)
-	CreateOrUpdate(u *Guest) (*Guest, error)
+	Get(eventId, id string) (*Task, error)
+	List(eventId string) ([]*Task, error)
+	CreateOrUpdate(eventId string, u *Task) (*Task, error)
 	Delete(eventId, id string) error
 }
 
+/*
 type ExpenseService interface {
 	Get(eventId, id string) (*Expense, error)
 	List(eventId string) ([]*Expense, error)
@@ -96,6 +96,15 @@ type Guest struct {
 	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
 }
 
+type Task struct {
+	TaskId        string `json:"taskId" validate:"required"`
+	Name          string `json:"name" validate:"required"`
+	Status        string `json:"status" validate:"required"` // PENDING, DONE
+	v             *validator.Validate
+	TimeCreatedOn time.Time `json:"timeCreatedOn"`
+	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
+}
+
 type Expense struct {
 	Id              uuid.UUID `json:"id" validate:"required"`
 	Name            string    `json:"name" validate:"required"`
@@ -105,15 +114,6 @@ type Expense struct {
 	v               *validator.Validate
 	TimeCreatedOn   time.Time `json:"timeCreatedOn"`
 	TimeUpdatedOn   time.Time `json:"timeUpdatedOn"`
-}
-
-type Task struct {
-	Id            uuid.UUID `json:"id" validate:"required"`
-	Name          string    `json:"name" validate:"required"`
-	Status        string    `json:"status" validate:"required"` // PENDING, DONE
-	v             *validator.Validate
-	TimeCreatedOn time.Time `json:"timeCreatedOn"`
-	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
 }
 
 type Location struct {
@@ -164,4 +164,13 @@ func (g *Guest) Validate() error {
 func GenerateId(value string) string {
 	data := []byte(strings.ToUpper(value))
 	return fmt.Sprintf("%x", md5.Sum(data))
+}
+
+func GenerateRandomId() (string, error) {
+
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return "", err
+	}
+	return id.String(), nil
 }
