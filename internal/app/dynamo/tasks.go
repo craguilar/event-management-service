@@ -109,23 +109,23 @@ func (c *TaskService) CreateOrUpdate(eventId string, u *app.Task) (*app.Task, er
 	}
 
 	log.Printf("CreateOrUpdate guest with Id /%s", u.Id)
-
-	value, err := c.Get(eventId, u.Id)
-	if err != nil {
-		return nil, err
-	}
-	if value == nil {
-		u.TimeCreatedOn = time.Now()
-	}
-	// If it exists update the time stamp!
-	u.TimeUpdatedOn = time.Now()
 	aTask, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
 		return nil, err
 	}
-	// Assign dynamo db key
+	value, err := c.Get(eventId, u.Id)
+	if err != nil {
+		return nil, err
+	}
+	// Create else Update
 	aTask[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
-	aTask[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_TASK_PREFIX + u.Id)}
+	if value == nil {
+		u.TimeCreatedOn = time.Now()
+		aTask[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_TASK_PREFIX + u.Id)}
+	} else {
+		u.TimeUpdatedOn = time.Now()
+		aTask[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
+	}
 	input := &dynamodb.PutItemInput{
 		Item:      aTask,
 		TableName: &c.db.TableName,
