@@ -17,6 +17,7 @@ type EventService interface {
 	Get(id string) (*Event, error)
 	List(eventManager string) ([]*EventSummary, error)
 	CreateOrUpdate(eventManager string, u *Event) (*Event, error)
+	CreateOwner(eventManager string, u *EventOwner) (*EventOwner, error)
 	Delete(id string) error
 }
 
@@ -52,15 +53,15 @@ type LocationService interface {
 
 // Event : Required Name , MainLocation, EventDay
 type Event struct {
-	Id            string      `json:"id"`
-	Name          string      `json:"name" validate:"required"`
-	MainLocation  string      `json:"mainLocation" validate:"required"`
-	EventDay      time.Time   `json:"eventDay" validate:"required"`
-	Description   string      `json:"description"`
-	Expenses      []*Expense  `json:"expenses"`
-	Guests        []*Guest    `json:"guests"`
-	Locations     []*Location `json:"locations"`
-	Tasks         []*Task     `json:"tasks"`
+	Id           string     `json:"id"`
+	Name         string     `json:"name" validate:"required"`
+	MainLocation string     `json:"mainLocation" validate:"required"`
+	EventDay     time.Time  `json:"eventDay" validate:"required"`
+	Description  string     `json:"description"`
+	Expenses     []*Expense `json:"expenses"`
+	Guests       []*Guest   `json:"guests"`
+	// TODO: Removed as it is currently only used in mock Locations     []*Location `json:"locations"`
+	// TODO: Removed as it is currently only used in mock Tasks         []*Task `json:"tasks"`
 	v             *validator.Validate
 	TimeCreatedOn time.Time `json:"timeCreatedOn"`
 	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`

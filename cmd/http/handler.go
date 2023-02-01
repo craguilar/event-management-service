@@ -114,6 +114,38 @@ func (c *EventServiceHandler) DeleteEvent(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 }
 
+func (c *EventServiceHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		log.Warn("Error when decoding Authorization ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
+		return
+	}
+	// Body decode
+	var newOwner app.EventOwner
+	err = json.NewDecoder(r.Body).Decode(&newOwner)
+	if err != nil {
+		log.Warn("Error when decoding Body", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Body parameter"))
+		return
+	}
+	// And finally add the owner
+	createdCar, err := c.eventService.CreateOwner(user, &newOwner)
+	if err != nil && err.Error() == "unauthorized" {
+		WriteError(w, 403, errors.New("not a valid owner"))
+		return
+	}
+	if err != nil {
+		log.Error("Error when creating owner ", err)
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(createdCar))
+}
+
 // Tasks
 
 func (c *EventServiceHandler) AddTask(w http.ResponseWriter, r *http.Request) {
@@ -309,6 +341,7 @@ func (c *EventServiceHandler) DeleteGuest(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 }
 
+// IMPORTANT: Checks for syntactically valid JWT check,  is NOT doing any validation.
 func getUser(r *http.Request) (string, error) {
 	authorization := r.Header.Get("Authorization")
 	authDetails := strings.Split(authorization, " ")

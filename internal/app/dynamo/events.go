@@ -1,6 +1,7 @@
 package dynamo
 
 import (
+	"errors"
 	"log"
 	"strings"
 	"time"
@@ -94,15 +95,22 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
+// TODO: I should add AuthZ to prevent the situation where, someone hacks its way and sends the
+// eventId same as an existing eventId from other owner , in the current situation we will accept
+// it AND end up adding a new owner . Ideally before calling CreateOrUpdate we should check if
+// updating an existing event , the eventManager MUST match an existing OWNER in the table.
 func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.Event, error) {
 	eventManager = strings.ToUpper(eventManager)
 	err := u.Validate()
 	if err != nil {
 		return nil, err
 	}
-	// If Id is nil populate it
+	// TODO: Document why I decided to add a random Id
 	if u.Id == "" {
-		u.Id = app.GenerateId(u.Name)
+		u.Id, err = app.GenerateRandomId()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	log.Printf("CreateOrUpdate event with name %s /%s", u.Name, u.Id)
@@ -157,6 +165,67 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 	return u, nil
 }
 
+// AddOwner receives a current eventManager coming from Authorization token AND adds
+// a new OWNER to an eventId.
+func (c *EventService) CreateOwner(userName string, u *app.EventOwner) (*app.EventOwner, error) {
+	// Does eventManager check
+	if !c.authorize(userName, u.EventSummary.Id) {
+		return nil, errors.New("unauthorized")
+	}
+	aOwner, err := dynamodbattribute.MarshalMap(u)
+	if err != nil {
+		return nil, err
+	}
+	//
+	newOwnerEmail := strings.ToUpper(u.OwnerEmail)
+	aOwner[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(u.EventSummary.Id)}
+	aOwner[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_OWNER_PREFIX + newOwnerEmail)}
+	input := &dynamodb.PutItemInput{
+		Item:      aOwner,
+		TableName: &c.db.TableName,
+	}
+	_, err = c.db.DbService.PutItem(input)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("Added new owner to %s", u.EventSummary.Id)
+	return u, nil
+}
+
+func (c *EventService) authorize(userName, eventId string) bool {
+	userName = strings.ToUpper(userName)
+	input := &dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			c.db.PK_ID: {
+				S: aws.String(eventId),
+			},
+			c.db.SORT_KEY: {
+				S: aws.String(_SORT_KEY_OWNER_PREFIX + userName),
+			},
+		},
+		TableName: &c.db.TableName,
+	}
+
+	result, err := c.db.DbService.GetItem(input)
+	if err != nil {
+		log.Printf("Error when GetItem for authorize in eventService %s", err)
+		return false
+
+	}
+	owner := &app.EventOwner{}
+	err = dynamodbattribute.UnmarshalMap(result.Item, owner)
+	if err != nil {
+		log.Printf("Error when UnmarshalMap for authorize in eventService %s", err)
+		return false
+	}
+	if owner.EventSummary.Id == "" {
+		log.Printf("Error when UnmarshalMap for authorize in eventService %s", err)
+		return false
+	}
+	return true
+}
+
+// TODO: I should Authorization here as well.
 func (c *EventService) Delete(id string) error {
 
 	// Get ALL associated elements

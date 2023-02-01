@@ -68,6 +68,10 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 	return u, nil
 }
 
+func (c *EventService) CreateOwner(eventManager string, u *app.EventOwner) (*app.EventOwner, error) {
+	return nil, errors.New("Not implemented")
+}
+
 func (c *EventService) Delete(id string) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()

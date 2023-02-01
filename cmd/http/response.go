@@ -14,7 +14,7 @@ func WriteError(w http.ResponseWriter, statusCode int, err error) {
 		errorCode = "InvalidParameter."
 	} else if statusCode == 404 {
 		errorCode = "NotFound or caller don't have access."
-	} else if statusCode == 401 {
+	} else if statusCode == 401 || statusCode == 403 {
 		errorCode = "Unauthorized"
 	} else if statusCode == 409 {
 		errorCode = "Conflict with resource"

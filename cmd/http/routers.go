@@ -34,6 +34,12 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 			strings.ToUpper("Post"),
 			BASE_PATH + "/events",
 			handler.AddEvent,
+		},
+		{
+			"AddOwner",
+			strings.ToUpper("Post"),
+			BASE_PATH + "/events/actions/addOwner",
+			handler.AddOwner,
 		}, {
 			"GetEvent",
 			strings.ToUpper("Get"),
