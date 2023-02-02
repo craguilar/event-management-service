@@ -37,7 +37,7 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 		},
 		{
 			"AddOwner",
-			strings.ToUpper("Post"),
+			strings.ToUpper("Put"),
 			BASE_PATH + "/events/actions/share",
 			handler.AddOwner,
 		}, {
@@ -64,7 +64,7 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 		// Guests
 		{
 			"AddOrUpdateGuest",
-			strings.ToUpper("Put"),
+			strings.ToUpper("Post"),
 			BASE_PATH + "/guests",
 			handler.AddGuest,
 		}, {
