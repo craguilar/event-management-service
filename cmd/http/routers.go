@@ -105,6 +105,28 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 			BASE_PATH + "/tasks/{taskId}",
 			handler.DeleteTask,
 		},
+		//Expenses
+		{
+			"AddOrUpdateExpense",
+			strings.ToUpper("Post"),
+			BASE_PATH + "/expenses",
+			handler.AddExpense,
+		}, {
+			"GetExpense",
+			strings.ToUpper("Get"),
+			BASE_PATH + "/expenses/{expenseId}",
+			handler.GetExpense,
+		}, {
+			"ListExpenses",
+			strings.ToUpper("Get"),
+			BASE_PATH + "/expenses",
+			handler.ListExpenses,
+		}, {
+			"DeleteExpense",
+			strings.ToUpper("Delete"),
+			BASE_PATH + "/expenses/{expenseId}",
+			handler.DeleteExpense,
+		},
 	}
 	//
 	router := mux.NewRouter().StrictSlash(true)

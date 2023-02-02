@@ -36,26 +36,24 @@ type TaskService interface {
 	Delete(eventId, id string) error
 }
 
-/*
 type ExpenseService interface {
-	Get(eventId, id string) (*Expense, error)
-	List(eventId string) ([]*Expense, error)
-	CreateOrUpdate(u *Expense) (*Expense, error)
+	Get(eventId, id string) (*ExpenseCategory, error)
+	List(eventId string) ([]*ExpenseCategory, error)
+	CreateOrUpdate(eventId string, u *ExpenseCategory) (*ExpenseCategory, error)
 	Delete(eventId, id string) error
 }
-*/
 
 // Event : Required Name , MainLocation, EventDay
 type Event struct {
-	Id           string     `json:"id"`
-	Name         string     `json:"name" validate:"required"`
-	MainLocation string     `json:"mainLocation" validate:"required"`
-	EventDay     time.Time  `json:"eventDay" validate:"required"`
-	Description  string     `json:"description"`
-	Expenses     []*Expense `json:"expenses"`
-	Guests       []*Guest   `json:"guests"`
-	// TODO: Removed as it is currently only used in mock Locations     []*Location `json:"locations"`
-	// TODO: Removed as it is currently only used in mock Tasks         []*Task `json:"tasks"`
+	Id           string    `json:"id"`
+	Name         string    `json:"name" validate:"required"`
+	MainLocation string    `json:"mainLocation" validate:"required"`
+	EventDay     time.Time `json:"eventDay" validate:"required"`
+	Description  string    `json:"description"`
+	Guests       []*Guest  `json:"guests"`
+	// TODO: Removed as it is currently used only used in mock Expenses     []*Expense `json:"expenses"`
+	// TODO: Removed as it is currently used only used in mock Locations     []*Location `json:"locations"`
+	// TODO: Removed as it is currently only used in mock      Tasks         []*Task `json:"tasks"`
 	v             *validator.Validate
 	TimeCreatedOn time.Time `json:"timeCreatedOn"`
 	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
@@ -105,20 +103,44 @@ type Task struct {
 	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
 }
 
-type Expense struct {
-	Id              uuid.UUID `json:"id" validate:"required"`
-	Name            string    `json:"name" validate:"required"`
-	AmountProjected float64   `json:"amountProjected"`
-	AmountActual    float64   `json:"amountActual"`
-	AmountPaid      float64   `json:"amountPaid"`
+// Expense representation , the Category MUST be unique per eventId
+type ExpenseCategory struct {
+	Id              string     `json:"id"`
+	Category        string     `json:"category" validate:"required"`
+	AmountProjected float64    `json:"amountProjected"`
+	AmountPaid      float64    `json:"amountPaid"`
+	AmountTotal     float64    `json:"amountTotal"`
+	Expenses        []*Expense `json:"expenses"`
 	v               *validator.Validate
 	TimeCreatedOn   time.Time `json:"timeCreatedOn"`
 	TimeUpdatedOn   time.Time `json:"timeUpdatedOn"`
 }
 
+type Expense struct {
+	Id            string    `json:"id"`
+	WhoPaid       string    `json:"whoPaid" validate:"required"`
+	TimePaidOn    time.Time `json:"timePaidOn"`
+	AmountPaid    float64   `json:"amountPaid"`
+	v             *validator.Validate
+	TimeCreatedOn time.Time `json:"timeCreatedOn"`
+	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
+}
+
 func (e *Event) Validate() error {
 	if e.v == nil {
 		e.v = validator.New()
+	}
+	return e.v.Struct(e)
+}
+
+func (e *ExpenseCategory) Validate() error {
+	if e.v == nil {
+		e.v = validator.New()
+	}
+	for _, value := range e.Expenses {
+		if err := value.Validate(); err != nil {
+			return err
+		}
 	}
 	return e.v.Struct(e)
 }

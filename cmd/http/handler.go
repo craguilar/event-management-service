@@ -15,16 +15,18 @@ import (
 )
 
 type EventServiceHandler struct {
-	eventService app.EventService
-	guestService app.GuestService
-	taskService  app.TaskService
+	eventService   app.EventService
+	guestService   app.GuestService
+	taskService    app.TaskService
+	expenseService app.ExpenseService
 }
 
-func NewServiceHandler(event app.EventService, guest app.GuestService, task app.TaskService) *EventServiceHandler {
+func NewServiceHandler(event app.EventService, guest app.GuestService, task app.TaskService, expense app.ExpenseService) *EventServiceHandler {
 	return &EventServiceHandler{
-		eventService: event,
-		guestService: guest,
-		taskService:  task,
+		eventService:   event,
+		guestService:   guest,
+		taskService:    task,
+		expenseService: expense,
 	}
 }
 
@@ -355,6 +357,104 @@ func (c *EventServiceHandler) DeleteGuest(w http.ResponseWriter, r *http.Request
 		return
 	}
 	err := c.guestService.Delete(eventId, guestId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// Expenses
+func (c *EventServiceHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
+
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warn("Expected eventId")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
+		return
+	}
+
+	var expense app.ExpenseCategory
+	err := json.NewDecoder(r.Body).Decode(&expense)
+	if err != nil {
+		log.Warn("Error when decoding Body", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Body parameter"))
+		return
+	}
+	createdExpense, err := c.expenseService.CreateOrUpdate(eventId, &expense)
+	if err != nil {
+		log.Error("Error when creating event ", err)
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(createdExpense))
+}
+
+func (c *EventServiceHandler) GetExpense(w http.ResponseWriter, r *http.Request) {
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warn("Expected eventId")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
+		return
+	}
+	vars := mux.Vars(r)
+	expenseId, ok := vars["expenseId"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
+		return
+	}
+	expense, err := c.expenseService.Get(eventId, expenseId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	if expense == nil {
+		WriteError(w, http.StatusNotFound, nil)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(expense))
+}
+
+func (c *EventServiceHandler) ListExpenses(w http.ResponseWriter, r *http.Request) {
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warnf("Expected eventId got %s", eventId)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
+		return
+	}
+	expenses, err := c.expenseService.List(eventId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(expenses))
+}
+
+func (c *EventServiceHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warn("Expected eventId")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expectde eventId as query parameter"))
+		return
+	}
+
+	vars := mux.Vars(r)
+	expenseId, ok := vars["expenseId"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
+		return
+	}
+	err := c.expenseService.Delete(eventId, expenseId)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return

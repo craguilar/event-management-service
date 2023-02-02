@@ -39,7 +39,8 @@ func main() {
 	event := dynamo.NewEventService(db)
 	guest := dynamo.NewGuestService(db)
 	task := dynamo.NewTaskService(db)
-	handler := appHttp.NewServiceHandler(event, guest, task)
+	expense := dynamo.NewExpenseService(db)
+	handler := appHttp.NewServiceHandler(event, guest, task, expense)
 	// Router and Lambda Handler
 	router := appHttp.NewRouter(handler)
 	lambdHandler := NewLambaHandler(router)

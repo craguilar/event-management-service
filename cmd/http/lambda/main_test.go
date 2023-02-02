@@ -55,7 +55,7 @@ func createMockHandler() *LambaHandler {
 	// Create service and provide it to handler
 	event := mock.NewEventService()
 	guest := mock.NewGuestService(event)
-	handler := appHttp.NewServiceHandler(event, guest, nil)
+	handler := appHttp.NewServiceHandler(event, guest, nil, nil)
 	router := appHttp.NewRouter(handler)
 	return NewLambaHandler(router)
 }

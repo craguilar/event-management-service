@@ -11,19 +11,19 @@ import (
 	"github.com/craguilar/event-management-service/internal/app"
 )
 
-const _SORT_KEY_GUEST_PREFIX = "GUEST-"
+const _SORT_KEY_EXPENSE_CATEGORY_PREFIX = "EXPENSE_CATEGORY-"
 
-type GuestService struct {
+type ExpenseService struct {
 	db *DBConfig
 }
 
-func NewGuestService(db *DBConfig) *GuestService {
-	return &GuestService{
+func NewExpenseService(db *DBConfig) *ExpenseService {
+	return &ExpenseService{
 		db: db,
 	}
 }
 
-func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
+func (c *ExpenseService) Get(eventId, id string) (*app.ExpenseCategory, error) {
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			c.db.PK_ID: {
@@ -42,20 +42,20 @@ func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
 
 	}
 
-	event := &app.Guest{}
-	err = dynamodbattribute.UnmarshalMap(result.Item, event)
+	category := &app.ExpenseCategory{}
+	err = dynamodbattribute.UnmarshalMap(result.Item, category)
 	if err != nil {
 		return nil, err
 	}
-	if event.Id == "" {
+	if category.Category == "" {
 		return nil, nil
 	}
-	log.Printf("Return %v", event)
-	return event, nil
+	log.Printf("Return %v", category)
+	return category, nil
 }
 
-func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
-	log.Printf("Getting all events for %s", eventId)
+func (c *ExpenseService) List(eventId string) ([]*app.ExpenseCategory, error) {
+	log.Printf("Getting all expenses for %s", eventId)
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
 		KeyConditions: map[string]*dynamodb.Condition{
@@ -71,7 +71,7 @@ func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 				ComparisonOperator: aws.String("BEGINS_WITH"),
 				AttributeValueList: []*dynamodb.AttributeValue{
 					{
-						S: aws.String(_SORT_KEY_GUEST_PREFIX),
+						S: aws.String(_SORT_KEY_EXPENSE_CATEGORY_PREFIX),
 					},
 				},
 			},
@@ -83,27 +83,28 @@ func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 		return nil, err
 	}
 	// Given we use a single table model until here result.Items contains ALL the same duplicated Id :)
-	list := []*app.Guest{}
+	list := []*app.ExpenseCategory{}
 	for _, value := range result.Items {
-		guest := &app.Guest{}
-		err = dynamodbattribute.UnmarshalMap(value, guest)
+		expense := &app.ExpenseCategory{}
+		err = dynamodbattribute.UnmarshalMap(value, expense)
 		if err != nil {
 			return nil, err
 		}
-		guest.Id = *aws.String(*value[c.db.SORT_KEY].S)
-		list = append(list, guest)
+		expense.Id = *aws.String(*value[c.db.SORT_KEY].S)
+		list = append(list, expense)
 	}
 	return list, nil
 }
 
-func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest, error) {
+// TODO: We shall add a condition that restricts the max number of
+func (c *ExpenseService) CreateOrUpdate(eventId string, u *app.ExpenseCategory) (*app.ExpenseCategory, error) {
 	err := u.Validate()
 	if err != nil {
 		return nil, err
 	}
 	// If Id is nil populate it
 	if u.Id == "" {
-		u.Id = app.GenerateId(strings.ToUpper(u.FirstName + u.LastName))
+		u.Id = app.GenerateId(strings.ToUpper(u.Category))
 	}
 
 	log.Printf("CreateOrUpdate guest with Id /%s", u.Id)
@@ -117,28 +118,32 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 	}
 	// If it exists update the time stamp!
 	u.TimeUpdatedOn = time.Now()
-	aGuest, err := dynamodbattribute.MarshalMap(u)
+	aExpense, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
 		return nil, err
 	}
 	// Assign dynamo db key
-	aGuest[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
-	aGuest[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_GUEST_PREFIX + u.Id)}
+	aExpense[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
+	if value == nil {
+		u.TimeCreatedOn = time.Now()
+		aExpense[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_EXPENSE_CATEGORY_PREFIX + u.Id)}
+	} else {
+		u.TimeUpdatedOn = time.Now()
+		aExpense[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
+	}
 	input := &dynamodb.PutItemInput{
-		Item:      aGuest,
+		Item:      aExpense,
 		TableName: &c.db.TableName,
 	}
-	// TODO: Handle Update use case for Update
-
 	_, err = c.db.DbService.PutItem(input)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Creatde guest with Id %s", u.Id)
+	log.Printf("Creatde an expense with Id %s", u.Id)
 	return u, nil
 }
 
-func (c *GuestService) Delete(eventId, id string) error {
+func (c *ExpenseService) Delete(eventId, id string) error {
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			c.db.PK_ID: {
