@@ -43,13 +43,6 @@ type ExpenseService interface {
 	CreateOrUpdate(u *Expense) (*Expense, error)
 	Delete(eventId, id string) error
 }
-
-type LocationService interface {
-	Get(eventId, id string) (*Location, error)
-	List(eventId string) ([]*Location, error)
-	CreateOrUpdate(u *Location) (*Location, error)
-	Delete(eventId, id string) error
-}
 */
 
 // Event : Required Name , MainLocation, EventDay
@@ -123,28 +116,11 @@ type Expense struct {
 	TimeUpdatedOn   time.Time `json:"timeUpdatedOn"`
 }
 
-type Location struct {
-	Id            uuid.UUID `json:"id" validate:"required"`
-	Name          string    `json:"name"`
-	Where         string    `json:"where" validate:"required"`
-	When          time.Time `json:"when" validate:"required"`
-	v             *validator.Validate
-	TimeCreatedOn time.Time `json:"timeCreatedOn"`
-	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
-}
-
 func (e *Event) Validate() error {
 	if e.v == nil {
 		e.v = validator.New()
 	}
 	return e.v.Struct(e)
-}
-
-func (l *Location) Validate() error {
-	if l.v == nil {
-		l.v = validator.New()
-	}
-	return l.v.Struct(l)
 }
 
 func (e *Expense) Validate() error {

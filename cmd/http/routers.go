@@ -64,7 +64,7 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 		// Guests
 		{
 			"AddOrUpdateGuest",
-			strings.ToUpper("Post"),
+			strings.ToUpper("Put"),
 			BASE_PATH + "/guests",
 			handler.AddGuest,
 		}, {

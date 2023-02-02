@@ -154,7 +154,7 @@ func (c *TaskService) Delete(eventId, id string) error {
 
 	_, err := c.db.DbService.DeleteItem(input)
 	if err != nil {
-		log.Printf("Got error calling delete Item  %s ", err)
+		log.Printf("Got error calling delete task  %s ", err)
 		return err
 	}
 	return nil

@@ -165,6 +165,63 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 	return u, nil
 }
 
+// AddOwner receives a current eventManager coming from Authorization token AND adds
+// a new OWNER to an eventId.
+
+// TODO: I should Authorization here as well.
+func (c *EventService) Delete(id string) error {
+
+	// Get ALL associated elements
+	var queryInput = &dynamodb.QueryInput{
+		TableName: aws.String(c.db.TableName),
+		KeyConditions: map[string]*dynamodb.Condition{
+			c.db.PK_ID: {
+				ComparisonOperator: aws.String("EQ"),
+				AttributeValueList: []*dynamodb.AttributeValue{
+					{
+						S: aws.String(id),
+					},
+				},
+			},
+		},
+	}
+
+	result, err := c.db.DbService.Query(queryInput)
+	if err != nil {
+		log.Printf("Error when querying by HASH key - %s", err)
+		return err
+	}
+
+	transactions := []*dynamodb.TransactWriteItem{}
+	for _, value := range result.Items {
+		transactions = append(transactions, &dynamodb.TransactWriteItem{
+			Delete: &dynamodb.Delete{
+				Key: map[string]*dynamodb.AttributeValue{
+					c.db.PK_ID: {
+						S: aws.String(id),
+					},
+					c.db.SORT_KEY: {
+						S: aws.String(*value[c.db.SORT_KEY].S),
+					},
+				},
+				TableName: &c.db.TableName,
+			},
+		})
+
+	}
+
+	// Batch delete
+	transactWriteInput := &dynamodb.TransactWriteItemsInput{TransactItems: transactions}
+	_, err = c.db.DbService.TransactWriteItems(transactWriteInput)
+	if err != nil {
+		log.Printf("Got error calling Delete event - %s", err)
+		return err
+	}
+	return nil
+}
+
+// Owner
+
 func (c *EventService) ListOwners(id string) (*app.EventSharedEmails, error) {
 
 	log.Printf("Getting all events for %s", id)
@@ -209,8 +266,6 @@ func (c *EventService) ListOwners(id string) (*app.EventSharedEmails, error) {
 	return sharedEmails, nil
 }
 
-// AddOwner receives a current eventManager coming from Authorization token AND adds
-// a new OWNER to an eventId.
 func (c *EventService) CreateOwner(userName string, u *app.EventSharedEmails) (*app.EventSharedEmails, error) {
 	// Does eventManager check
 	if !c.authorize(userName, u.EventId) {
@@ -235,8 +290,8 @@ func (c *EventService) CreateOwner(userName string, u *app.EventSharedEmails) (*
 		aOwner[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_OWNER_PREFIX + u.SharedEmails[i])}
 
 		transactions = append(transactions, &dynamodb.TransactWriteItem{
-			Update: &dynamodb.Update{
-				Key:       aOwner,
+			Put: &dynamodb.Put{
+				Item:      aOwner,
 				TableName: &c.db.TableName,
 			},
 		})
@@ -285,58 +340,6 @@ func (c *EventService) authorize(userName, eventId string) bool {
 		return false
 	}
 	return true
-}
-
-// TODO: I should Authorization here as well.
-func (c *EventService) Delete(id string) error {
-
-	// Get ALL associated elements
-	var queryInput = &dynamodb.QueryInput{
-		TableName: aws.String(c.db.TableName),
-		KeyConditions: map[string]*dynamodb.Condition{
-			c.db.PK_ID: {
-				ComparisonOperator: aws.String("EQ"),
-				AttributeValueList: []*dynamodb.AttributeValue{
-					{
-						S: aws.String(id),
-					},
-				},
-			},
-		},
-	}
-
-	result, err := c.db.DbService.Query(queryInput)
-	if err != nil {
-		log.Printf("Error when querying by HASH key - %s", err)
-		return err
-	}
-
-	transactions := []*dynamodb.TransactWriteItem{}
-	for _, value := range result.Items {
-		transactions = append(transactions, &dynamodb.TransactWriteItem{
-			Delete: &dynamodb.Delete{
-				Key: map[string]*dynamodb.AttributeValue{
-					c.db.PK_ID: {
-						S: aws.String(id),
-					},
-					c.db.SORT_KEY: {
-						S: aws.String(*value[c.db.SORT_KEY].S),
-					},
-				},
-				TableName: &c.db.TableName,
-			},
-		})
-
-	}
-
-	// Batch delete
-	transactWriteInput := &dynamodb.TransactWriteItemsInput{TransactItems: transactions}
-	_, err = c.db.DbService.TransactWriteItems(transactWriteInput)
-	if err != nil {
-		log.Printf("Got error calling Delete - %s", err)
-		return err
-	}
-	return nil
 }
 
 func eventOwner(userName string, event *app.Event) *app.EventOwner {
