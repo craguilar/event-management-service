@@ -16,8 +16,9 @@ import (
 type EventService interface {
 	Get(id string) (*Event, error)
 	List(eventManager string) ([]*EventSummary, error)
+	ListOwners(id string) (*EventSharedEmails, error)
 	CreateOrUpdate(eventManager string, u *Event) (*Event, error)
-	CreateOwner(eventManager string, u *EventOwner) (*EventOwner, error)
+	CreateOwner(eventManager string, u *EventSharedEmails) (*EventSharedEmails, error)
 	Delete(id string) error
 }
 
@@ -78,6 +79,11 @@ type EventSummary struct {
 type EventOwner struct {
 	OwnerEmail   string `json:"ownerEmail" validate:"required"`
 	EventSummary *EventSummary
+}
+
+type EventSharedEmails struct {
+	EventId      string   `json:"eventId" validate:"required"`
+	SharedEmails []string `json:"sharedEmails" validate:"required"`
 }
 
 // Guest : Required FirstName,LastName,Tentative,NumberOfSeats

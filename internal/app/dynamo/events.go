@@ -165,30 +165,92 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 	return u, nil
 }
 
+func (c *EventService) ListOwners(id string) (*app.EventSharedEmails, error) {
+
+	log.Printf("Getting all events for %s", id)
+	var queryInput = &dynamodb.QueryInput{
+		TableName: aws.String(c.db.TableName),
+		KeyConditions: map[string]*dynamodb.Condition{
+			c.db.PK_ID: {
+				ComparisonOperator: aws.String("EQ"),
+				AttributeValueList: []*dynamodb.AttributeValue{
+					{
+						S: aws.String(id),
+					},
+				},
+			},
+			c.db.SORT_KEY: {
+				ComparisonOperator: aws.String("BEGINS_WITH"),
+				AttributeValueList: []*dynamodb.AttributeValue{
+					{
+						S: aws.String(_SORT_KEY_OWNER_PREFIX),
+					},
+				},
+			},
+		},
+	}
+
+	result, err := c.db.DbService.Query(queryInput)
+	if err != nil {
+		return nil, err
+	}
+	// Given we use a single table model until here result.Items contains ALL the same duplicated Id :)
+	sharedEmails := &app.EventSharedEmails{
+		EventId:      id,
+		SharedEmails: []string{},
+	}
+	for _, value := range result.Items {
+		sortKey := *aws.String(*value[c.db.SORT_KEY].S)
+		if !strings.HasPrefix(sortKey, _SORT_KEY_OWNER_PREFIX) {
+			continue
+		}
+		sharedEmails.SharedEmails = append(sharedEmails.SharedEmails, strings.ReplaceAll(sortKey, _SORT_KEY_OWNER_PREFIX, ""))
+	}
+	return sharedEmails, nil
+}
+
 // AddOwner receives a current eventManager coming from Authorization token AND adds
 // a new OWNER to an eventId.
-func (c *EventService) CreateOwner(userName string, u *app.EventOwner) (*app.EventOwner, error) {
+func (c *EventService) CreateOwner(userName string, u *app.EventSharedEmails) (*app.EventSharedEmails, error) {
 	// Does eventManager check
-	if !c.authorize(userName, u.EventSummary.Id) {
+	if !c.authorize(userName, u.EventId) {
 		return nil, errors.New("unauthorized")
 	}
-	aOwner, err := dynamodbattribute.MarshalMap(u)
+	event, err := c.Get(u.EventId)
 	if err != nil {
 		return nil, err
 	}
 	//
-	newOwnerEmail := strings.ToUpper(u.OwnerEmail)
-	aOwner[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(u.EventSummary.Id)}
-	aOwner[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_OWNER_PREFIX + newOwnerEmail)}
-	input := &dynamodb.PutItemInput{
-		Item:      aOwner,
-		TableName: &c.db.TableName,
+	transactions := []*dynamodb.TransactWriteItem{}
+	for i := 0; i < len(u.SharedEmails); i++ {
+		u.SharedEmails[i] = strings.ToUpper(u.SharedEmails[i])
+		if strings.HasPrefix(u.SharedEmails[i], _SORT_KEY_OWNER_PREFIX) {
+			return nil, errors.New("plain emails expected")
+		}
+		aOwner, err := dynamodbattribute.MarshalMap(eventOwner(u.SharedEmails[i], event))
+		if err != nil {
+			return nil, err
+		}
+		aOwner[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(u.EventId)}
+		aOwner[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_OWNER_PREFIX + u.SharedEmails[i])}
+
+		transactions = append(transactions, &dynamodb.TransactWriteItem{
+			Update: &dynamodb.Update{
+				Key:       aOwner,
+				TableName: &c.db.TableName,
+			},
+		})
 	}
-	_, err = c.db.DbService.PutItem(input)
+
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Added new owner to %s", u.EventSummary.Id)
+	transactWriteInput := &dynamodb.TransactWriteItemsInput{TransactItems: transactions}
+	_, err = c.db.DbService.TransactWriteItems(transactWriteInput)
+	if err != nil {
+		log.Printf("Got error calling Delete - %s", err)
+		return nil, err
+	}
 	return u, nil
 }
 
@@ -268,8 +330,7 @@ func (c *EventService) Delete(id string) error {
 	}
 
 	// Batch delete
-	transactWriteInput := &dynamodb.TransactWriteItemsInput{
-		TransactItems: transactions}
+	transactWriteInput := &dynamodb.TransactWriteItemsInput{TransactItems: transactions}
 	_, err = c.db.DbService.TransactWriteItems(transactWriteInput)
 	if err != nil {
 		log.Printf("Got error calling Delete - %s", err)

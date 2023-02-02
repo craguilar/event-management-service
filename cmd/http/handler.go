@@ -114,6 +114,27 @@ func (c *EventServiceHandler) DeleteEvent(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 }
 
+func (c *EventServiceHandler) ListOwners(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	eventId, ok := vars["eventId"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
+		return
+	}
+	owners, err := c.eventService.ListOwners(eventId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	if owners == nil {
+		WriteError(w, http.StatusNotFound, nil)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(SerializeData(owners))
+}
+
 func (c *EventServiceHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(r)
 	if err != nil {
@@ -123,7 +144,7 @@ func (c *EventServiceHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Body decode
-	var newOwner app.EventOwner
+	var newOwner app.EventSharedEmails
 	err = json.NewDecoder(r.Body).Decode(&newOwner)
 	if err != nil {
 		log.Warn("Error when decoding Body", err)
@@ -132,7 +153,7 @@ func (c *EventServiceHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// And finally add the owner
-	createdCar, err := c.eventService.CreateOwner(user, &newOwner)
+	sharedEmails, err := c.eventService.CreateOwner(user, &newOwner)
 	if err != nil && err.Error() == "unauthorized" {
 		WriteError(w, 403, errors.New("not a valid owner"))
 		return
@@ -143,7 +164,7 @@ func (c *EventServiceHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(SerializeData(createdCar))
+	w.Write(SerializeData(sharedEmails))
 }
 
 // Tasks
