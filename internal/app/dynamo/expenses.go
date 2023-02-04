@@ -126,6 +126,7 @@ func (c *ExpenseService) CreateOrUpdate(eventId string, u *app.ExpenseCategory) 
 	aExpense[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
 	if value == nil {
 		u.TimeCreatedOn = time.Now()
+		u.Expenses = []*app.Expense{}
 		aExpense[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_EXPENSE_CATEGORY_PREFIX + u.Id)}
 	} else {
 		u.TimeUpdatedOn = time.Now()
