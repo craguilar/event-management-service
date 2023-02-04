@@ -108,7 +108,7 @@ func (c *ExpenseService) CreateOrUpdate(eventId string, u *app.ExpenseCategory) 
 	}
 	amountPaid := 0.0
 	for i := range u.Expenses {
-		amountPaid = +u.Expenses[i].AmountPaid
+		amountPaid = amountPaid + u.Expenses[i].AmountPaid
 		if u.Expenses[i].Id == "" {
 			u.Expenses[i].Id, err = app.GenerateRandomId()
 			if err != nil {
