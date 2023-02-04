@@ -106,7 +106,9 @@ func (c *ExpenseService) CreateOrUpdate(eventId string, u *app.ExpenseCategory) 
 	if u.Id == "" {
 		u.Id = app.GenerateId(strings.ToUpper(u.Category))
 	}
-	for i, _ := range u.Expenses {
+	amountPaid := 0.0
+	for i := range u.Expenses {
+		amountPaid = +u.Expenses[i].AmountPaid
 		if u.Expenses[i].Id == "" {
 			u.Expenses[i].Id, err = app.GenerateRandomId()
 			if err != nil {
@@ -126,6 +128,7 @@ func (c *ExpenseService) CreateOrUpdate(eventId string, u *app.ExpenseCategory) 
 	}
 	// If it exists update the time stamp!
 	u.TimeUpdatedOn = time.Now()
+	u.AmountPaid = amountPaid
 	aExpense, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
 		return nil, err
