@@ -106,6 +106,14 @@ func (c *ExpenseService) CreateOrUpdate(eventId string, u *app.ExpenseCategory) 
 	if u.Id == "" {
 		u.Id = app.GenerateId(strings.ToUpper(u.Category))
 	}
+	for i, _ := range u.Expenses {
+		if u.Expenses[i].Id == "" {
+			u.Expenses[i].Id, err = app.GenerateRandomId()
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	log.Printf("CreateOrUpdate guest with Id /%s", u.Id)
 
