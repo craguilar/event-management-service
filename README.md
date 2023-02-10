@@ -52,12 +52,6 @@ local computer. If you haven't, do that first , then:
     sam local start-api -p 8080
     ```
 
-1. Open http://127.0.0.1:8080/ in a web browser to view your webapp or execute
-
-  ```bash
-  scripts/test-integration.sh
-  ```
-
 ### Server mode
 
 Run server mode using mock:
@@ -74,7 +68,11 @@ Then open http://127.0.0.1:8080/ in a web browser to view your webapp or execute
 
 ### Dynamo DB
 
-Download Dynamo DB from  https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html
+Start dynamo db locally.
+
+1. Download Dynamo DB from  https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html
+
+2. Create the `events` table.
 
 ```bash
 aws dynamodb create-table --endpoint-url http://localhost:8000 \
@@ -90,7 +88,7 @@ aws dynamodb create-table --endpoint-url http://localhost:8000 \
         \"Projection\":{\"ProjectionType\":\"ALL\"}}]"
 ```
 
-Check the table exists:
+3. Check the table exists
 
 ```bash
 aws dynamodb describe-table --table-name events --endpoint-url http://localhost:800
@@ -101,6 +99,8 @@ And validate table estructure
 ```bash
 aws dynamodb scan --table-name events --endpoint-url http://localhost:8000
 ```
+
+Other useful commands:
 
 Scan records
 
@@ -116,20 +116,16 @@ Validate your Cloudformation template using below command:
 aws cloudformation validate-template --template-body file://./template.yml
 ```
 
-## Security
+## API Gateway
+
+### Authorizer
 
 Once deployed in AWS the Lambda is securde to ONLY be callable from IAM or trusted AWS Service , that means unless you have a trusted account in AWS you
 won't be able to call the Lambda.
 
-To enable non AWS IAM based Authentication/Authorization our Lambda integates with API Gateway where we have attached the Authorizer https://github.com/craguilar/demo-cars-lambda that will require a valid JWT token (in this case provided by Amazon Cognito) and pass this token to the AWS Gateway path as a query parameter named `token` .
+To enable non AWS IAM based Authentication/Authorization our Lambda integates with API Gateway where we have attached the JWT Authorizer that will require a valid JWT token (in this case provided by Amazon Cognito) and pass this token to the AWS Gateway path as a query parameter named `token` , also I added a path on OPTIONS to not require Auth, see below:
 
-You can get a valid token using:
-
-```bash
-curl -X POST --user '${OAUTH_CLIENT_ID}:${OAUTH_CLIENT_SECRET}'  \
- 'https://democars.auth.us-east-2.amazoncognito.com/oauth2/token?grant_type=client_credentials&scope=profile' \
- -H 'Content-Type: application/x-www-form-urlencoded'
-```
+OPTIONS /{proxy+} no op see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html?icmpid=apigateway_console_help
 
 ## Contributing
 
@@ -145,8 +141,9 @@ Requires Go version 1.18 - see https://go.dev/blog/vuln
 
 ## ToDo
 
-1. Reduce number of calls made for OPTIONS in API Gateway.
+1. Harden potential abuse of parameters to introduce max size restrictions.
 1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
+1. Reduce number of calls made for OPTIONS in API Gateway.
 
 ## References
 
