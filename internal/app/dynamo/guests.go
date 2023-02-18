@@ -123,7 +123,13 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 	}
 	// Assign dynamo db key
 	aGuest[c.db.PK_ID] = &dynamodb.AttributeValue{S: aws.String(eventId)}
-	aGuest[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_GUEST_PREFIX + u.Id)}
+	if value == nil {
+		u.TimeCreatedOn = time.Now()
+		aGuest[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(_SORT_KEY_GUEST_PREFIX + u.Id)}
+	} else {
+		u.TimeUpdatedOn = time.Now()
+		aGuest[c.db.SORT_KEY] = &dynamodb.AttributeValue{S: aws.String(u.Id)}
+	}
 	input := &dynamodb.PutItemInput{
 		Item:      aGuest,
 		TableName: &c.db.TableName,
