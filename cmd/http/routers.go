@@ -105,7 +105,7 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 			BASE_PATH + "/tasks/{taskId}",
 			handler.DeleteTask,
 		},
-		//Expenses
+		// Expenses
 		{
 			"AddOrUpdateExpense",
 			strings.ToUpper("Post"),
