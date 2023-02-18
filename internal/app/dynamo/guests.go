@@ -116,7 +116,6 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 		u.TimeCreatedOn = time.Now()
 	}
 	// If it exists update the time stamp!
-	u.TimeUpdatedOn = time.Now()
 	aGuest, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
 		return nil, err
