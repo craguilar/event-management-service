@@ -95,7 +95,7 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
-// TODO: I should add AuthZ to prevent the situation where, someone hacks its way and sends the
+// Added AuthZ to prevent the situation where, someone hacks its way and sends the
 // eventId same as an existing eventId from other owner , in the current situation we will accept
 // it AND end up adding a new owner . Ideally before calling CreateOrUpdate we should check if
 // updating an existing event , the eventManager MUST match an existing OWNER in the table.
@@ -104,6 +104,9 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 	err := u.Validate()
 	if err != nil {
 		return nil, err
+	}
+	if u.Id != "" && !c.authorize(eventManager, u.Id) {
+		return nil, errors.New("unauthorized")
 	}
 	// TODO: Document why I decided to add a random Id
 	if u.Id == "" {
@@ -165,12 +168,11 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 	return u, nil
 }
 
-// AddOwner receives a current eventManager coming from Authorization token AND adds
-// a new OWNER to an eventId.
+func (c *EventService) Delete(eventManager, id string) error {
 
-// TODO: I should Authorization here as well.
-func (c *EventService) Delete(id string) error {
-
+	if !c.authorize(eventManager, id) {
+		return errors.New("unauthorized")
+	}
 	// Get ALL associated elements
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
@@ -221,7 +223,6 @@ func (c *EventService) Delete(id string) error {
 }
 
 // Owner
-
 func (c *EventService) ListOwners(id string) (*app.EventSharedEmails, error) {
 
 	log.Printf("Getting all events for %s", id)
@@ -266,6 +267,8 @@ func (c *EventService) ListOwners(id string) (*app.EventSharedEmails, error) {
 	return sharedEmails, nil
 }
 
+// AddOwner receives a current eventManager coming from Authorization token AND adds
+// a new OWNER to an eventId.
 func (c *EventService) CreateOwner(userName string, u *app.EventSharedEmails) (*app.EventSharedEmails, error) {
 	// Does eventManager check
 	if !c.authorize(userName, u.EventId) {

@@ -76,7 +76,7 @@ func (c *EventService) CreateOwner(eventManager string, u *app.EventSharedEmails
 	return nil, errors.New("not implemented")
 }
 
-func (c *EventService) Delete(id string) error {
+func (c *EventService) Delete(eventManager, id string) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 

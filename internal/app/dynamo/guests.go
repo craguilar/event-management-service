@@ -133,8 +133,6 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 		Item:      aGuest,
 		TableName: &c.db.TableName,
 	}
-	// TODO: Handle Update use case for Update
-
 	_, err = c.db.DbService.PutItem(input)
 	if err != nil {
 		return nil, err

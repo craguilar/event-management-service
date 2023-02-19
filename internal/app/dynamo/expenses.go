@@ -96,7 +96,6 @@ func (c *ExpenseService) List(eventId string) ([]*app.ExpenseCategory, error) {
 	return list, nil
 }
 
-// TODO: We shall add a condition that restricts the max number of
 func (c *ExpenseService) CreateOrUpdate(eventId string, u *app.ExpenseCategory) (*app.ExpenseCategory, error) {
 	err := u.Validate()
 	if err != nil {

@@ -101,6 +101,13 @@ func (c *EventServiceHandler) ListEvent(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *EventServiceHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		log.Warn("Error when decoding Authorization ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
+		return
+	}
 	vars := mux.Vars(r)
 	eventId, ok := vars["eventId"]
 	if !ok {
@@ -108,7 +115,7 @@ func (c *EventServiceHandler) DeleteEvent(w http.ResponseWriter, r *http.Request
 		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
 		return
 	}
-	err := c.eventService.Delete(eventId)
+	err = c.eventService.Delete(user, eventId)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -381,6 +388,13 @@ func (c *EventServiceHandler) AddExpense(w http.ResponseWriter, r *http.Request)
 		log.Warn("Error when decoding Body", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(SerializeError(http.StatusBadRequest, "Invalid Body parameter"))
+		return
+	}
+	// Arbitrart number to avoid ExpenseCategory row growing large
+	if len(expense.Expenses) > 80 {
+		log.Warn("Trying to create more than 80 Expenses  . Not allowed", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Trying to create more than 80 Expenses  . Not allowed"))
 		return
 	}
 	createdExpense, err := c.expenseService.CreateOrUpdate(eventId, &expense)
