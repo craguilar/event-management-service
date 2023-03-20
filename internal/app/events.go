@@ -2,6 +2,7 @@ package app
 
 import (
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -76,19 +77,20 @@ type EventSharedEmails struct {
 
 // Guest : Required FirstName,LastName,Tentative,NumberOfSeats
 type Guest struct {
-	Id            string `json:"id"`
-	FirstName     string `json:"firstName" validate:"required"`
-	LastName      string `json:"lastName" validate:"required"`
-	GuestOf       string `json:"guestOf"`
-	Email         string `json:"email"`
-	Phone         string `json:"phone"`
-	Tentative     bool   `json:"isTentative"`
-	Country       string `json:"country"`
-	State         string `json:"state"`
-	NumberOfSeats int    `json:"numberOfSeats" validate:"required"`
-	v             *validator.Validate
-	TimeCreatedOn time.Time `json:"timeCreatedOn"`
-	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
+	Id             string `json:"id"`
+	FirstName      string `json:"firstName" validate:"required"`
+	LastName       string `json:"lastName" validate:"required"`
+	GuestOf        string `json:"guestOf"`
+	Email          string `json:"email"`
+	Phone          string `json:"phone"`
+	Tentative      bool   `json:"isTentative"`
+	Country        string `json:"country"`
+	State          string `json:"state"`
+	RequiresInvite bool   `json:"requiresInvite"`
+	NumberOfSeats  int    `json:"numberOfSeats" validate:"required"`
+	v              *validator.Validate
+	TimeCreatedOn  time.Time `json:"timeCreatedOn"`
+	TimeUpdatedOn  time.Time `json:"timeUpdatedOn"`
 }
 
 type Task struct {
@@ -134,6 +136,11 @@ func (e *ExpenseCategory) Validate() error {
 	if e.v == nil {
 		e.v = validator.New()
 	}
+	// Arbitrart number to avoid ExpenseCategory row growing large
+	if len(e.Expenses) > 80 {
+		return errors.New("trying to create more than 80 Expenses  . Not allowed")
+	}
+
 	for _, value := range e.Expenses {
 		if err := value.Validate(); err != nil {
 			return err

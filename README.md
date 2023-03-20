@@ -1,6 +1,7 @@
 # Event Management
 
-This sample code helps get you started with a simple Go web application deployed by AWS CloudFormation to AWS Lambda and Amazon API Gateway.
+This sample code helps get you started with a simple Go web application deployed by AWS CloudFormation to AWS Lambda and 
+Amazon API Gateway.
 
 ## What's Here?
 
@@ -141,9 +142,9 @@ Requires Go version 1.18 - see https://go.dev/blog/vuln
 
 ## ToDo
 
+1. Sending messages https://www.twilio.com/docs/whatsapp
 1. Harden potential abuse of parameters to introduce max size restrictions.
 1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
-1. Reduce number of calls made for OPTIONS in API Gateway.
 
 ## References
 
@@ -151,6 +152,10 @@ Requires Go version 1.18 - see https://go.dev/blog/vuln
 1. Best practices for working with AWS Lambda functions - https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html
 1. AWS Lamdba Golang https://docs.aws.amazon.com/lambda/latest/dg/golang-handler.html
 1. AWS Lambda EnvVars https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
+
+## Pending to document:
+
+1. https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-id-token.html
 1. https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/using-dynamodb-with-go-sdk.html
 1. https://github.com/go-playground/validator
 1. Using Viper as configuration framework https://github.com/spf13/viper/blob/master/viper.go

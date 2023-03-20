@@ -390,13 +390,6 @@ func (c *EventServiceHandler) AddExpense(w http.ResponseWriter, r *http.Request)
 		w.Write(SerializeError(http.StatusBadRequest, "Invalid Body parameter"))
 		return
 	}
-	// Arbitrart number to avoid ExpenseCategory row growing large
-	if len(expense.Expenses) > 80 {
-		log.Warn("Trying to create more than 80 Expenses  . Not allowed", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(SerializeError(http.StatusBadRequest, "Trying to create more than 80 Expenses  . Not allowed"))
-		return
-	}
 	createdExpense, err := c.expenseService.CreateOrUpdate(eventId, &expense)
 	if err != nil {
 		log.Error("Error when creating event ", err)
