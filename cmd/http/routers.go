@@ -83,6 +83,12 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 			BASE_PATH + "/guests/{guestId}",
 			handler.DeleteGuest,
 		},
+		{
+			"ActionCopyGuests",
+			strings.ToUpper("Post"),
+			BASE_PATH + "/actions/copy",
+			handler.CopyGuests,
+		},
 		// Tasks
 		{
 			"AddOrUpdateTask",

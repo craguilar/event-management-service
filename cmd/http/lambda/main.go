@@ -34,10 +34,11 @@ func init() {
 
 func main() {
 	log.Printf("Lambda started")
-	// Create service and provide it to handler
+	// Authorization
+	authorize := dynamo.NewAuthorizationService(db)
 	// Create services and provide it to handler
-	event := dynamo.NewEventService(db)
-	guest := dynamo.NewGuestService(db)
+	event := dynamo.NewEventService(db, authorize)
+	guest := dynamo.NewGuestService(db, authorize)
 	task := dynamo.NewTaskService(db)
 	expense := dynamo.NewExpenseService(db)
 	handler := appHttp.NewServiceHandler(event, guest, task, expense)

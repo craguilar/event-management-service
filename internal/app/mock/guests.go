@@ -33,6 +33,10 @@ func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
 	return guest, err
 }
 
+func (c *GuestService) CopyFrom(userName string, eventId string, copy *app.CopyGuestRequest) error {
+	return errors.New("not implemented")
+}
+
 func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()

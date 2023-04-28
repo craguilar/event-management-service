@@ -18,15 +18,17 @@ const _SORT_KEY_OWNER_PREFIX = "OWNER-"
 
 // EventService represents a Dynamo DB implementation of internal.EventService.
 type EventService struct {
-	db *DBConfig
+	db        *DBConfig
+	authorize *AuthorizationService
 }
 
-func NewEventService(db *DBConfig) *EventService {
+func NewEventService(db *DBConfig, authorize *AuthorizationService) *EventService {
 	if db == nil {
 		log.Panicf("Null reference to db config in EventService")
 	}
 	return &EventService{
-		db: db,
+		db:        db,
+		authorize: authorize,
 	}
 }
 
@@ -105,7 +107,7 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 	if err != nil {
 		return nil, err
 	}
-	if u.Id != "" && !c.authorize(eventManager, u.Id) {
+	if u.Id != "" && !c.authorize.Authorize(eventManager, u.Id) {
 		return nil, errors.New("unauthorized")
 	}
 	// TODO: Document why I decided to add a random Id
@@ -170,7 +172,7 @@ func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.E
 
 func (c *EventService) Delete(eventManager, id string) error {
 
-	if !c.authorize(eventManager, id) {
+	if !c.authorize.Authorize(eventManager, id) {
 		return errors.New("unauthorized")
 	}
 	// Get ALL associated elements
@@ -271,7 +273,7 @@ func (c *EventService) ListOwners(id string) (*app.EventSharedEmails, error) {
 // a new OWNER to an eventId.
 func (c *EventService) CreateOwner(userName string, u *app.EventSharedEmails) (*app.EventSharedEmails, error) {
 	// Does eventManager check
-	if !c.authorize(userName, u.EventId) {
+	if !c.authorize.Authorize(userName, u.EventId) {
 		return nil, errors.New("unauthorized")
 	}
 	event, err := c.Get(u.EventId)
@@ -310,39 +312,6 @@ func (c *EventService) CreateOwner(userName string, u *app.EventSharedEmails) (*
 		return nil, err
 	}
 	return u, nil
-}
-
-func (c *EventService) authorize(userName, eventId string) bool {
-	userName = strings.ToUpper(userName)
-	input := &dynamodb.GetItemInput{
-		Key: map[string]*dynamodb.AttributeValue{
-			c.db.PK_ID: {
-				S: aws.String(eventId),
-			},
-			c.db.SORT_KEY: {
-				S: aws.String(_SORT_KEY_OWNER_PREFIX + userName),
-			},
-		},
-		TableName: &c.db.TableName,
-	}
-
-	result, err := c.db.DbService.GetItem(input)
-	if err != nil {
-		log.Printf("Error when GetItem for authorize in eventService %s", err)
-		return false
-
-	}
-	owner := &app.EventOwner{}
-	err = dynamodbattribute.UnmarshalMap(result.Item, owner)
-	if err != nil {
-		log.Printf("Error when UnmarshalMap for authorize in eventService %s", err)
-		return false
-	}
-	if owner.EventSummary.Id == "" {
-		log.Printf("Error when UnmarshalMap for authorize in eventService %s", err)
-		return false
-	}
-	return true
 }
 
 func eventOwner(userName string, event *app.Event) *app.EventOwner {

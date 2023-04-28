@@ -302,6 +302,40 @@ func (c *EventServiceHandler) AddGuest(w http.ResponseWriter, r *http.Request) {
 	w.Write(SerializeData(createdGuest))
 }
 
+func (c *EventServiceHandler) CopyGuests(w http.ResponseWriter, r *http.Request) {
+
+	eventId := r.URL.Query().Get("eventId")
+	if eventId == "" {
+		log.Warn("Expected eventId")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
+		return
+	}
+	user, err := getUser(r)
+	if err != nil {
+		log.Warn("Error when decoding Authorization ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
+		return
+	}
+	// Body decode
+	var copyRequest app.CopyGuestRequest
+	err = json.NewDecoder(r.Body).Decode(&copyRequest)
+	if err != nil {
+		log.Warn("Error when decoding Body", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Body parameter"))
+		return
+	}
+	err = c.guestService.CopyFrom(user, eventId, &copyRequest)
+	if err != nil {
+		log.Error("Error when creating event ", err)
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+}
+
 func (c *EventServiceHandler) GetGuest(w http.ResponseWriter, r *http.Request) {
 	eventId := r.URL.Query().Get("eventId")
 	if eventId == "" {

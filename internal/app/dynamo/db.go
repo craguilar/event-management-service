@@ -9,6 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
+const C_PK_ID = "id"
+const C_SORT_KEY = "entityType"
+const C_GSI_OWNER = "ownerIdx"
+
 type DBConfig struct {
 	DbService *dynamodb.DynamoDB
 	TableName string
@@ -21,9 +25,9 @@ func InitDb(db *dynamodb.DynamoDB, tableName string) *DBConfig {
 	return &DBConfig{
 		DbService: db,
 		TableName: tableName,
-		PK_ID:     "id",
-		SORT_KEY:  "entityType",
-		GSI_OWNER: "ownerIdx",
+		PK_ID:     C_PK_ID,
+		SORT_KEY:  C_SORT_KEY,
+		GSI_OWNER: C_GSI_OWNER,
 	}
 }
 

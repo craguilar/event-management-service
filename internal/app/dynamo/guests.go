@@ -1,6 +1,7 @@
 package dynamo
 
 import (
+	"errors"
 	"log"
 	"strings"
 	"time"
@@ -14,12 +15,14 @@ import (
 const _SORT_KEY_GUEST_PREFIX = "GUEST-"
 
 type GuestService struct {
-	db *DBConfig
+	db        *DBConfig
+	authorize *AuthorizationService
 }
 
-func NewGuestService(db *DBConfig) *GuestService {
+func NewGuestService(db *DBConfig, authorize *AuthorizationService) *GuestService {
 	return &GuestService{
-		db: db,
+		db:        db,
+		authorize: authorize,
 	}
 }
 
@@ -139,6 +142,24 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 	}
 	log.Printf("Creatde guest with Id %s", u.Id)
 	return u, nil
+}
+
+func (c *GuestService) CopyFrom(userName string, eventId string, copy *app.CopyGuestRequest) error {
+
+	if !c.authorize.Authorize(userName, eventId) {
+		return errors.New("unauthorized")
+	}
+	guests, err := c.List(copy.FromEvent)
+	if err != nil {
+		return err
+	}
+	for _, guest := range guests {
+		guest.Id = ""
+		if _, err := c.CreateOrUpdate(eventId, guest); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *GuestService) Delete(eventId, id string) error {

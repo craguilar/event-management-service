@@ -13,6 +13,10 @@ import (
 
 // TODO on 01-20-2023: Add pagination and stuff too busy for it now
 
+type AuthorizationService interface {
+	Authorize(userName, eventId string) bool
+}
+
 // Interface for Event service
 type EventService interface {
 	Get(id string) (*Event, error)
@@ -26,6 +30,7 @@ type EventService interface {
 type GuestService interface {
 	Get(eventId, id string) (*Guest, error)
 	List(eventId string) ([]*Guest, error)
+	CopyFrom(eventManager string, eventId string, copy *CopyGuestRequest) error
 	CreateOrUpdate(eventId string, u *Guest) (*Guest, error)
 	Delete(eventId, id string) error
 }
@@ -91,6 +96,10 @@ type Guest struct {
 	v              *validator.Validate
 	TimeCreatedOn  time.Time `json:"timeCreatedOn"`
 	TimeUpdatedOn  time.Time `json:"timeUpdatedOn"`
+}
+
+type CopyGuestRequest struct {
+	FromEvent string `json:"fromEvent"`
 }
 
 type Task struct {
