@@ -34,6 +34,8 @@ Resources:
       Handler: main
       Runtime: go1.x
       Timeout: 6
+      Architectures:
+      - arm64 # Set architecture to use Graviton2
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
