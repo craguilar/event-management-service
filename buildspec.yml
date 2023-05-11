@@ -13,16 +13,16 @@ phases:
     - export GO111MODULE="on"
     # Install Testify to use common assertions and mocks in tests
     - go get -u github.com/stretchr/testify
-
+    - go install honnef.co/go/tools/cmd/staticcheck@latest
   pre_build:
     commands:
 
     # Fetch all dependencies
     - go mod tidy
 
-    # Check for common Go application problems with 'go vet'
+    # Check for common Go application problems with 'go vet' and staticcheck
     - go vet ./...
-
+    - staticcheck ./...
     # Run all tests included with our application
     - go test ./...
 

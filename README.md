@@ -109,6 +109,27 @@ Scan records
 aws dynamodb scan --table-name events --endpoint-url http://localhost:8000
 ```
 
+### Actions
+
+#### Copy Guests from
+
+We had to implement the first potential "batch" processing API `/guests/actions/copy`, the 
+problems with this API is : it perform a Batch operation, this means:
+
+1. Get all guests from a source Event.
+2. Copy 1 by 1 , from the Source event to the To event. The transaction is at the
+guest level
+3. Complete.
+
+This operation is not only latency sensitive but also could fail in between just copying certain
+number of Guests, we decided to keep this as part of the Lambda and increase the Timeout threshold,
+the main reason why we went for this approach was *simplicity* , while we could
+have come up with a `batch` approach where we consider `Copy` an entire transaction
+we required to come up with a robust mechanism to handle failures, that's fine
+but an overkill. In the current approach if a given  `Copy` request fails it can
+be retried without duplication issues, we can think this as _Idempotency_.
+
+
 ## Deployment
 
 Validate your Cloudformation template using below command:
@@ -139,6 +160,21 @@ gofmt -w -s .
 ### Vulnerability checking
 
 Requires Go version 1.18 - see https://go.dev/blog/vuln
+
+### Linters
+
+* [govet](https://golang.org/cmd/vet/) to analyze code for common mistakes
+* [staticcheck](https://staticcheck.io/) to do various static analysis checks
+
+TODO: Planning to add below linters to the build pipeline , not yet implemented
+
+* [errcheck](https://github.com/kisielk/errcheck) to ensure that errors are handled.
+* [golint](https://github.com/golang/lint) to point out common style mistakes
+
+```bash
+errcheck ./...
+golint ./...
+```
 
 ## ToDo
 
