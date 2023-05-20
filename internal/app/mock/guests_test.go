@@ -18,12 +18,12 @@ func TestList(t *testing.T) {
 	guestService := NewGuestService(eventService)
 	//Create
 	guest := &app.Guest{FirstName: "Mickey", LastName: "Mouse", Tentative: false, NumberOfSeats: 1}
-	_, err = guestService.CreateOrUpdate(event.Id, guest)
+	_, err = guestService.CreateOrUpdate("dummy", event.Id, guest)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}
 
-	guests, err := guestService.List(event.Id)
+	guests, err := guestService.List("dummy", event.Id)
 	// Assertion
 
 	if err != nil {
@@ -45,7 +45,7 @@ func TestGuestCreation(t *testing.T) {
 	guestService := NewGuestService(eventService)
 
 	guest := &app.Guest{FirstName: "Mickey", LastName: "Mouse", Tentative: false, NumberOfSeats: 1}
-	_, err = guestService.CreateOrUpdate(event.Id, guest)
+	_, err = guestService.CreateOrUpdate("dummy", event.Id, guest)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}
@@ -70,13 +70,13 @@ func TestGuestUpdate(t *testing.T) {
 	guestService := NewGuestService(eventService)
 	//Create
 	guest := &app.Guest{FirstName: "Mickey", LastName: "Mouse", Tentative: false, NumberOfSeats: 1}
-	_, err = guestService.CreateOrUpdate(event.Id, guest)
+	_, err = guestService.CreateOrUpdate("dummy", event.Id, guest)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}
 	//Update
 	guest.Email = "my-email@nowhere.com"
-	guestService.CreateOrUpdate(event.Id, guest)
+	guestService.CreateOrUpdate("dummy", event.Id, guest)
 	// Assertion
 	event2, err := eventService.Get(event.Id)
 	if err != nil {
@@ -98,12 +98,12 @@ func TestDelete(t *testing.T) {
 	guestService := NewGuestService(eventService)
 	//Create
 	guest := &app.Guest{FirstName: "Mickey", LastName: "Mouse", Tentative: false, NumberOfSeats: 1}
-	_, err = guestService.CreateOrUpdate(event.Id, guest)
+	_, err = guestService.CreateOrUpdate("dummy", event.Id, guest)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}
 
-	guests, err := guestService.List(event.Id)
+	guests, err := guestService.List("dummy", event.Id)
 	// Then pre condition Assertions
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
@@ -111,9 +111,9 @@ func TestDelete(t *testing.T) {
 	if len(guests) != 1 {
 		t.Fatalf("A list guest of size 1 is expected")
 	}
-	guestService.Delete(event.Id, guests[0].Id)
+	guestService.Delete("dummy", event.Id, guests[0].Id)
 	//Assert
-	guests2, err := guestService.List(event.Id)
+	guests2, err := guestService.List("dummy", event.Id)
 	if err != nil {
 		t.Fatalf("Test failed with error %s", err)
 	}

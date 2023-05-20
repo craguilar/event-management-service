@@ -21,7 +21,7 @@ func NewGuestService(eventService app.EventService) *GuestService {
 	}
 }
 
-func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
+func (c *GuestService) Get(eventManager, eventId, id string) (*app.Guest, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	// Get the value
@@ -37,7 +37,7 @@ func (c *GuestService) CopyFrom(userName string, eventId string, copy *app.CopyG
 	return errors.New("not implemented")
 }
 
-func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
+func (c *GuestService) List(eventManager, eventId string) ([]*app.Guest, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -51,7 +51,7 @@ func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 	return value.Guests, nil
 }
 
-func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest, error) {
+func (c *GuestService) CreateOrUpdate(eventManager, eventId string, u *app.Guest) (*app.Guest, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -84,7 +84,7 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 	return u, nil
 }
 
-func (c *GuestService) Delete(eventId, id string) error {
+func (c *GuestService) Delete(eventManager, eventId, id string) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	event, _ := c.eventService.Get(eventId)

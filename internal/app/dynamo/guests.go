@@ -26,7 +26,8 @@ func NewGuestService(db *DBConfig, authorize *AuthorizationService) *GuestServic
 	}
 }
 
-func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
+func (c *GuestService) Get(eventManager, eventId, id string) (*app.Guest, error) {
+
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			c.db.PK_ID: {
@@ -57,7 +58,7 @@ func (c *GuestService) Get(eventId, id string) (*app.Guest, error) {
 	return event, nil
 }
 
-func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
+func (c *GuestService) List(eventManager, eventId string) ([]*app.Guest, error) {
 	log.Printf("Getting all events for %s", eventId)
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
@@ -99,7 +100,7 @@ func (c *GuestService) List(eventId string) ([]*app.Guest, error) {
 	return list, nil
 }
 
-func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest, error) {
+func (c *GuestService) CreateOrUpdate(eventManager, eventId string, u *app.Guest) (*app.Guest, error) {
 	err := u.Validate()
 	if err != nil {
 		return nil, err
@@ -111,7 +112,7 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 
 	log.Printf("CreateOrUpdate guest with Id /%s", u.Id)
 
-	value, err := c.Get(eventId, u.Id)
+	value, err := c.Get(eventManager, eventId, u.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -144,25 +145,25 @@ func (c *GuestService) CreateOrUpdate(eventId string, u *app.Guest) (*app.Guest,
 	return u, nil
 }
 
-func (c *GuestService) CopyFrom(userName string, eventId string, copy *app.CopyGuestRequest) error {
+func (c *GuestService) CopyFrom(eventManager string, eventId string, copy *app.CopyGuestRequest) error {
 
-	if !c.authorize.Authorize(userName, eventId) {
+	if !c.authorize.Authorize(eventManager, eventId) {
 		return errors.New("unauthorized")
 	}
-	guests, err := c.List(copy.FromEvent)
+	guests, err := c.List(eventManager, copy.FromEvent)
 	if err != nil {
 		return err
 	}
 	for _, guest := range guests {
 		guest.Id = ""
-		if _, err := c.CreateOrUpdate(eventId, guest); err != nil {
+		if _, err := c.CreateOrUpdate(eventManager, eventId, guest); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *GuestService) Delete(eventId, id string) error {
+func (c *GuestService) Delete(eventManager, eventId, id string) error {
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			c.db.PK_ID: {

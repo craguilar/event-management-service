@@ -28,11 +28,11 @@ type EventService interface {
 }
 
 type GuestService interface {
-	Get(eventId, id string) (*Guest, error)
-	List(eventId string) ([]*Guest, error)
+	Get(eventManager, eventId, id string) (*Guest, error)
+	List(eventManager, eventId string) ([]*Guest, error)
 	CopyFrom(eventManager string, eventId string, copy *CopyGuestRequest) error
-	CreateOrUpdate(eventId string, u *Guest) (*Guest, error)
-	Delete(eventId, id string) error
+	CreateOrUpdate(eventManager, eventId string, u *Guest) (*Guest, error)
+	Delete(eventManager, eventId, id string) error
 }
 
 type TaskService interface {

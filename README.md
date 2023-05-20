@@ -127,8 +127,7 @@ the main reason why we went for this approach was *simplicity* , while we could
 have come up with a `batch` approach where we consider `Copy` an entire transaction
 we required to come up with a robust mechanism to handle failures, that's fine
 but an overkill. In the current approach if a given  `Copy` request fails it can
-be retried without duplication issues, we can think this as _Idempotency_.
-
+be retried without duplication issues, we can think this as *Idempotency*.
 
 ## Deployment
 

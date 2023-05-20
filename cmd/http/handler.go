@@ -275,7 +275,16 @@ func (c *EventServiceHandler) DeleteTask(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
+// Guests
+
 func (c *EventServiceHandler) AddGuest(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		log.Warn("Error when decoding Authorization ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
+		return
+	}
 	var guest app.Guest
 	eventId := r.URL.Query().Get("eventId")
 	if eventId == "" {
@@ -285,14 +294,14 @@ func (c *EventServiceHandler) AddGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&guest)
+	err = json.NewDecoder(r.Body).Decode(&guest)
 	if err != nil {
 		log.Warn("Error when decoding Body", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(SerializeError(http.StatusBadRequest, "Invalid Body parameter"))
 		return
 	}
-	createdGuest, err := c.guestService.CreateOrUpdate(eventId, &guest)
+	createdGuest, err := c.guestService.CreateOrUpdate(user, eventId, &guest)
 	if err != nil {
 		log.Error("Error when creating event ", err)
 		WriteError(w, http.StatusInternalServerError, err)
@@ -337,6 +346,13 @@ func (c *EventServiceHandler) CopyGuests(w http.ResponseWriter, r *http.Request)
 }
 
 func (c *EventServiceHandler) GetGuest(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		log.Warn("Error when decoding Authorization ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
+		return
+	}
 	eventId := r.URL.Query().Get("eventId")
 	if eventId == "" {
 		log.Warn("Expectde eventId")
@@ -351,7 +367,7 @@ func (c *EventServiceHandler) GetGuest(w http.ResponseWriter, r *http.Request) {
 		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
 		return
 	}
-	car, err := c.guestService.Get(eventId, guestId)
+	car, err := c.guestService.Get(user, eventId, guestId)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -365,6 +381,13 @@ func (c *EventServiceHandler) GetGuest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *EventServiceHandler) ListGuest(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		log.Warn("Error when decoding Authorization ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
+		return
+	}
 	eventId := r.URL.Query().Get("eventId")
 	if eventId == "" {
 		log.Warnf("Expected eventId got %s", eventId)
@@ -372,7 +395,7 @@ func (c *EventServiceHandler) ListGuest(w http.ResponseWriter, r *http.Request) 
 		w.Write(SerializeError(http.StatusBadRequest, "Expected eventId as query parameter"))
 		return
 	}
-	guests, err := c.guestService.List(eventId)
+	guests, err := c.guestService.List(user, eventId)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -382,6 +405,13 @@ func (c *EventServiceHandler) ListGuest(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *EventServiceHandler) DeleteGuest(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		log.Warn("Error when decoding Authorization ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(SerializeError(http.StatusBadRequest, "Invalid Authorization header"))
+		return
+	}
 	eventId := r.URL.Query().Get("eventId")
 	if eventId == "" {
 		log.Warn("Expected eventId")
@@ -397,7 +427,7 @@ func (c *EventServiceHandler) DeleteGuest(w http.ResponseWriter, r *http.Request
 		w.Write(SerializeError(http.StatusBadRequest, "BadRequest"))
 		return
 	}
-	err := c.guestService.Delete(eventId, guestId)
+	err = c.guestService.Delete(user, eventId, guestId)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return
