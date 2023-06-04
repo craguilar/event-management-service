@@ -177,7 +177,6 @@ golint ./...
 
 ## ToDo
 
-1. Sending messages https://www.twilio.com/docs/whatsapp
 1. Harden potential abuse of parameters to introduce max size restrictions.
 1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
 

@@ -92,6 +92,7 @@ type Guest struct {
 	Country        string `json:"country"`
 	State          string `json:"state"`
 	RequiresInvite bool   `json:"requiresInvite"`
+	NotAttending   bool   `jsob:"isNotAttending"`
 	NumberOfSeats  int    `json:"numberOfSeats" validate:"required"`
 	v              *validator.Validate
 	TimeCreatedOn  time.Time `json:"timeCreatedOn"`
