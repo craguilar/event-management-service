@@ -17,6 +17,10 @@ func (c *TaskService) List(eventId string) ([]*app.Task, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (c *TaskService) SendNotifications(eventId string) error {
+	return errors.New("not implemented")
+}
+
 func (c *TaskService) CreateOrUpdate(eventId string, u *app.Task) (*app.Task, error) {
 	return nil, errors.New("not implemented")
 }

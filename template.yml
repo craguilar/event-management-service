@@ -48,7 +48,9 @@ Resources:
           Type: ScheduleV2
           Properties:
             ScheduleExpression: "rate(10 minute)"
-
+            RetryPolicy:
+              MaximumRetryAttempts: 5
+            Input: '{"type": "PENDING_TASKS"}'
   EventsTable:
     Type: AWS::DynamoDB::Table
     Properties:

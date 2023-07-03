@@ -21,6 +21,7 @@ type AuthorizationService interface {
 type EventService interface {
 	Get(id string) (*Event, error)
 	List(eventManager string) ([]*EventSummary, error)
+	ListBy(EventFilter string) ([]*EventSummary, error)
 	ListOwners(id string) (*EventSharedEmails, error)
 	CreateOrUpdate(eventManager string, u *Event) (*Event, error)
 	CreateOwner(eventManager string, u *EventSharedEmails) (*EventSharedEmails, error)
@@ -68,6 +69,10 @@ type EventSummary struct {
 	MainLocation  string    `json:"mainLocation" validate:"required"`
 	EventDay      time.Time `json:"eventDay" validate:"required"`
 	TimeCreatedOn time.Time `json:"timeCreatedOn"`
+}
+
+type EventFilter struct {
+	EventDayGreaterOrEqualThan time.Time
 }
 
 type EventOwner struct {

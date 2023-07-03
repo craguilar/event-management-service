@@ -177,6 +177,7 @@ golint ./...
 
 ## ToDo
 
+1. Send weekly reminders on pending tasks.
 1. Harden potential abuse of parameters to introduce max size restrictions.
 1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
 

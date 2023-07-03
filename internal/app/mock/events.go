@@ -42,6 +42,17 @@ func (c *EventService) List(user string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
+func (c *EventService) ListBy(EventFilter string) ([]*app.EventSummary, error) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	list := []*app.EventSummary{}
+	for _, value := range c.db {
+		list = append(list, &app.EventSummary{Id: value.Id, Name: value.Name, MainLocation: value.MainLocation, EventDay: value.EventDay, TimeCreatedOn: value.TimeCreatedOn})
+	}
+	return list, nil
+}
+
 func (c *EventService) CreateOrUpdate(eventManager string, u *app.Event) (*app.Event, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()

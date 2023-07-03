@@ -97,6 +97,11 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
+func (c *EventService) ListBy(EventFilter string) ([]*app.EventSummary, error) {
+
+	return nil, nil
+}
+
 // Added AuthZ to prevent the situation where, someone hacks its way and sends the
 // eventId same as an existing eventId from other owner , in the current situation we will accept
 // it AND end up adding a new owner . Ideally before calling CreateOrUpdate we should check if
