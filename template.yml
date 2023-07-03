@@ -44,6 +44,10 @@ Resources:
           Properties:
             TimeoutInMillis: 15000
             PayloadFormatVersion: '1.0'
+        ScheduledEvent:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "cron(*/10 * * * *)"
 
   EventsTable:
     Type: AWS::DynamoDB::Table
