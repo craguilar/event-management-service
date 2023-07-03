@@ -47,7 +47,7 @@ Resources:
         ScheduledEvent:
           Type: ScheduleV2
           Properties:
-            ScheduleExpression: "cron(*/10 * * * *)"
+            ScheduleExpression: "rate(10 minute)"
 
   EventsTable:
     Type: AWS::DynamoDB::Table
