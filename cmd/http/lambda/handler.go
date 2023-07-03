@@ -26,9 +26,10 @@ func NewLambaHandler(r *mux.Router) *LambaHandler {
 func (h *LambaHandler) Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	log.Printf(
-		"Received request %s %s",
+		"Received request %s %s %s",
 		request.HTTPMethod,
 		request.Path,
+		request.Body,
 	)
 	response, err := h.adapter.Proxy(*core.NewSwitchableAPIGatewayRequestV1(&request))
 	if err != nil {
