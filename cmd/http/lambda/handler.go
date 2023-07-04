@@ -35,6 +35,7 @@ func (h *LambaHandler) Handler(raw map[string]interface{}) (events.APIGatewayPro
 		log.Error(err)
 		return getErrorResponse(err)
 	}
+	log.Printf("%v", raw)
 	// Try parsing into a APIGatewayProxyRequest
 	http := events.APIGatewayProxyRequest{}
 	if err := json.Unmarshal(request, &http); err == nil {
@@ -49,7 +50,7 @@ func (h *LambaHandler) Handler(raw map[string]interface{}) (events.APIGatewayPro
 func (h *LambaHandler) HandleHttp(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	log.Printf(
-		"Received request %s %s",
+		"HTTP received request %s %s",
 		request.HTTPMethod,
 		request.Path,
 	)
