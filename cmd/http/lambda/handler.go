@@ -35,13 +35,12 @@ func (h *LambaHandler) Handler(raw map[string]interface{}) (events.APIGatewayPro
 		log.Error(err)
 		return getErrorResponse(err)
 	}
-	log.Printf("%v", raw)
 	// Try parsing into a APIGatewayProxyRequest
 	http := events.APIGatewayProxyRequest{}
-	if err := json.Unmarshal(request, &http); err == nil {
-
+	if err := json.Unmarshal(request, &http); err == nil && http.HTTPMethod != "" {
 		return h.HandleHttp(http)
 	}
+	log.Printf("HTTP Parsed %v and request %v", http, request)
 	// Non handled code
 	return getErrorResponse(errors.New("type not enabled"))
 }
