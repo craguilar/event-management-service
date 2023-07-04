@@ -22,7 +22,7 @@ func TesGettHandler(t *testing.T) {
 	}
 
 	handler := createMockHandler()
-	response, err := handler.Handler(request)
+	response, err := handler.HandleHttp(request)
 
 	// assert.Equal(t, response.Headers, expectedResponse.Headers)
 	assert.Contains(t, response.Body, expectedResponse.Body)
@@ -43,7 +43,7 @@ func TesOptionstHandler(t *testing.T) {
 	}
 
 	handler := createMockHandler()
-	response, err := handler.Handler(request)
+	response, err := handler.HandleHttp(request)
 
 	assert.Contains(t, expectedResponse.StatusCode, response.StatusCode)
 	assert.Equal(t, err, nil)
