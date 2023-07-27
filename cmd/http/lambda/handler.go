@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 
+	cmdHttp "github.com/craguilar/event-management-service/cmd/http"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 
 	"github.com/gorilla/mux"
 
@@ -12,6 +14,10 @@ import (
 	"github.com/awslabs/aws-lambda-go-api-proxy/core"
 	"github.com/awslabs/aws-lambda-go-api-proxy/gorillamux"
 )
+
+type ScheduledRequest struct {
+	Type string `json:"type"`
+}
 
 type LambaHandler struct {
 	adapter *gorillamux.GorillaMuxAdapter
@@ -35,14 +41,36 @@ func (h *LambaHandler) Handler(raw map[string]interface{}) (events.APIGatewayPro
 		log.Error(err)
 		return getErrorResponse(err)
 	}
-	// Try parsing into a APIGatewayProxyRequest
 	http := events.APIGatewayProxyRequest{}
-	if err := json.Unmarshal(request, &http); err == nil && http.HTTPMethod != "" {
+
+	// Try parsing into a APIGatewayProxyRequest
+	if err := json.Unmarshal(request, &http); err == nil && !slices.Contains[string](cmdHttp.TASKS_PATH, http.Path) && http.HTTPMethod != "" {
 		return h.HandleHttp(http)
 	}
-	log.Printf("HTTP Parsed %v and request %v", http, request)
+	// TODO: Define how I want to handle the scheduled requests , my main concerns
+	// about reusing APIGatewayProxyRequest will be the fact that it could have
+	// a security breach
+	scheduled := ScheduledRequest{}
+	if err := json.Unmarshal(request, &scheduled); err == nil && scheduled.Type != "" {
+		return h.InterceptScheduled(scheduled)
+	}
 	// Non handled code
 	return getErrorResponse(errors.New("type not enabled"))
+}
+
+// TODO: This function requires refinement
+func (h *LambaHandler) InterceptScheduled(scheduled ScheduledRequest) (events.APIGatewayProxyResponse, error) {
+	if scheduled.Type != "PENDING_TASKS" {
+		return getErrorResponse(errors.New("invalid scheduled type"))
+	}
+	headers := map[string]string{"Authorization": "Bearer dummy"}
+	// TODO: Could we do this in a better way ?
+	request := events.APIGatewayProxyRequest{
+		Path:       cmdHttp.BASE_PATH + "/events/actions/notifyPendingTasks",
+		HTTPMethod: "POST",
+		Headers:    headers,
+	}
+	return h.HandleHttp(request)
 }
 
 // Handle HTTP , returns an Amazon API Gateway response object to AWS Lambda
@@ -54,6 +82,7 @@ func (h *LambaHandler) HandleHttp(request events.APIGatewayProxyRequest) (events
 		request.Path,
 	)
 	response, err := h.adapter.Proxy(*core.NewSwitchableAPIGatewayRequestV1(&request))
+	log.Printf("Response %v %v ", response.Version1().StatusCode, err)
 	if err != nil {
 		return getErrorResponse(err)
 	}

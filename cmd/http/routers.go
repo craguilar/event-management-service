@@ -60,6 +60,11 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 			strings.ToUpper("Delete"),
 			BASE_PATH + "/events/{eventId}",
 			handler.DeleteEvent,
+		}, {
+			"SendPendingTasksNotifications",
+			strings.ToUpper("Post"),
+			BASE_PATH + "/events/actions/notifyPendingTasks",
+			handler.SendNotifications,
 		},
 		// Guests
 		{

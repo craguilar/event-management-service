@@ -21,11 +21,16 @@ type AuthorizationService interface {
 type EventService interface {
 	Get(id string) (*Event, error)
 	List(eventManager string) ([]*EventSummary, error)
-	ListBy(EventFilter string) ([]*EventSummary, error)
+	ListBy(filter func(*EventSummary) bool) ([]*EventSummary, error)
 	ListOwners(id string) (*EventSharedEmails, error)
 	CreateOrUpdate(eventManager string, u *Event) (*Event, error)
 	CreateOwner(eventManager string, u *EventSharedEmails) (*EventSharedEmails, error)
 	Delete(eventManager, id string) error
+}
+
+type EventActions interface {
+	// Filter based on the referenced function
+	SendPendingTasksNotifications() error
 }
 
 type GuestService interface {
@@ -52,15 +57,16 @@ type ExpenseService interface {
 
 // Event : Required Name , MainLocation, EventDay. An event has Guests ,Expenses and Tasks
 type Event struct {
-	Id            string    `json:"id"`
-	Name          string    `json:"name" validate:"required"`
-	MainLocation  string    `json:"mainLocation" validate:"required"`
-	EventDay      time.Time `json:"eventDay" validate:"required"`
-	Description   string    `json:"description"`
-	Guests        []*Guest  `json:"guests"`
-	v             *validator.Validate
-	TimeCreatedOn time.Time `json:"timeCreatedOn"`
-	TimeUpdatedOn time.Time `json:"timeUpdatedOn"`
+	Id                  string    `json:"id"`
+	Name                string    `json:"name" validate:"required"`
+	MainLocation        string    `json:"mainLocation" validate:"required"`
+	EventDay            time.Time `json:"eventDay" validate:"required"`
+	Description         string    `json:"description"`
+	Guests              []*Guest  `json:"guests"`
+	NotificationEnabled bool      `json:"isNotificationEnabled"`
+	v                   *validator.Validate
+	TimeCreatedOn       time.Time `json:"timeCreatedOn"`
+	TimeUpdatedOn       time.Time `json:"timeUpdatedOn"`
 }
 
 type EventSummary struct {
@@ -69,10 +75,6 @@ type EventSummary struct {
 	MainLocation  string    `json:"mainLocation" validate:"required"`
 	EventDay      time.Time `json:"eventDay" validate:"required"`
 	TimeCreatedOn time.Time `json:"timeCreatedOn"`
-}
-
-type EventFilter struct {
-	EventDayGreaterOrEqualThan time.Time
 }
 
 type EventOwner struct {

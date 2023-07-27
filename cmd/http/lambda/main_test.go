@@ -30,6 +30,27 @@ func TesGettHandler(t *testing.T) {
 
 }
 
+func TesScheduledRequestHandler(t *testing.T) {
+
+	request := events.APIGatewayProxyRequest{}
+	request.Path = "/"
+	expectedResponse := events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: "404 page not found",
+	}
+
+	handler := createMockHandler()
+	response, err := handler.HandleHttp(request)
+
+	// assert.Equal(t, response.Headers, expectedResponse.Headers)
+	assert.Contains(t, response.Body, expectedResponse.Body)
+	assert.Equal(t, err, nil)
+
+}
+
 func TesOptionstHandler(t *testing.T) {
 
 	request := events.APIGatewayProxyRequest{}
@@ -56,7 +77,8 @@ func createMockHandler() *LambaHandler {
 	guest := mock.NewGuestService(event)
 	task := &mock.TaskService{}
 	expense := &mock.ExpenseService{}
-	handler := appHttp.NewServiceHandler(event, guest, task, expense)
+	action := mock.NewEventActionsService(event, task)
+	handler := appHttp.NewServiceHandler(event, action, guest, task, expense)
 	router := appHttp.NewRouter(handler)
 	return NewLambaHandler(router)
 }

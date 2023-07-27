@@ -97,9 +97,31 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
-func (c *EventService) ListBy(EventFilter string) ([]*app.EventSummary, error) {
+// TODO: I need to review if I can pass a predicate filter here.
+func (c *EventService) ListBy(filter func(*app.EventSummary) bool) ([]*app.EventSummary, error) {
 
-	return nil, nil
+	var scanInput = &dynamodb.ScanInput{
+		TableName: aws.String(c.db.TableName),
+	}
+
+	result, err := c.db.DbService.Scan(scanInput)
+	if err != nil {
+		return nil, err
+	}
+	list := []*app.EventSummary{}
+	for _, value := range result.Items {
+		event := &app.Event{}
+		err = dynamodbattribute.UnmarshalMap(value, event)
+		if err != nil {
+			return nil, err
+		}
+		event.Id = *aws.String(*value[c.db.PK_ID].S)
+		summary := &app.EventSummary{Id: event.Id, Name: event.Name, MainLocation: event.MainLocation, EventDay: event.EventDay, TimeCreatedOn: event.TimeCreatedOn}
+		if filter(summary) {
+			list = append(list, summary)
+		}
+	}
+	return list, nil
 }
 
 // Added AuthZ to prevent the situation where, someone hacks its way and sends the
@@ -232,7 +254,7 @@ func (c *EventService) Delete(eventManager, id string) error {
 // Owner
 func (c *EventService) ListOwners(id string) (*app.EventSharedEmails, error) {
 
-	log.Printf("Getting all events for %s", id)
+	log.Printf("Getting all owners for %s", id)
 	var queryInput = &dynamodb.QueryInput{
 		TableName: aws.String(c.db.TableName),
 		KeyConditions: map[string]*dynamodb.Condition{

@@ -1,7 +1,6 @@
 package dynamo
 
 import (
-	"errors"
 	"log"
 	"time"
 
@@ -94,10 +93,6 @@ func (c *TaskService) List(eventId string) ([]*app.Task, error) {
 		list = append(list, task)
 	}
 	return list, nil
-}
-
-func (c *TaskService) SendNotifications(eventId string) error {
-	return errors.New("not implemented")
 }
 
 func (c *TaskService) CreateOrUpdate(eventId string, u *app.Task) (*app.Task, error) {

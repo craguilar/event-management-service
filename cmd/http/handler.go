@@ -15,18 +15,20 @@ import (
 )
 
 type EventServiceHandler struct {
-	eventService   app.EventService
-	guestService   app.GuestService
-	taskService    app.TaskService
-	expenseService app.ExpenseService
+	eventService       app.EventService
+	eventActionService app.EventActions
+	guestService       app.GuestService
+	taskService        app.TaskService
+	expenseService     app.ExpenseService
 }
 
-func NewServiceHandler(event app.EventService, guest app.GuestService, task app.TaskService, expense app.ExpenseService) *EventServiceHandler {
+func NewServiceHandler(event app.EventService, actions app.EventActions, guest app.GuestService, task app.TaskService, expense app.ExpenseService) *EventServiceHandler {
 	return &EventServiceHandler{
-		eventService:   event,
-		guestService:   guest,
-		taskService:    task,
-		expenseService: expense,
+		eventService:       event,
+		eventActionService: actions,
+		guestService:       guest,
+		taskService:        task,
+		expenseService:     expense,
 	}
 }
 
@@ -116,6 +118,16 @@ func (c *EventServiceHandler) DeleteEvent(w http.ResponseWriter, r *http.Request
 		return
 	}
 	err = c.eventService.Delete(user, eventId)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (c *EventServiceHandler) SendNotifications(w http.ResponseWriter, r *http.Request) {
+	log.Info("Hit send notifications")
+	err := c.eventActionService.SendPendingTasksNotifications()
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return

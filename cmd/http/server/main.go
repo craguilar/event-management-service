@@ -28,9 +28,10 @@ func main() {
 	// Create services and provide it to handler
 	event := mock.NewEventService()
 	guest := mock.NewGuestService(event)
-	task := dynamo.NewTaskService(db)
+	task := &mock.TaskService{}
 	expense := dynamo.NewExpenseService(db)
-	handler := appHttp.NewServiceHandler(event, guest, task, expense)
+	action := mock.NewEventActionsService(event, task)
+	handler := appHttp.NewServiceHandler(event, action, guest, task, expense)
 	// Router config
 	router := appHttp.NewRouter(handler)
 

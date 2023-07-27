@@ -129,6 +129,10 @@ we required to come up with a robust mechanism to handle failures, that's fine
 but an overkill. In the current approach if a given  `Copy` request fails it can
 be retried without duplication issues, we can think this as *Idempotency*.
 
+#### Send notifications
+
+https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents.html
+
 ## Deployment
 
 Validate your Cloudformation template using below command:

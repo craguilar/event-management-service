@@ -8,12 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-
+	"github.com/aws/aws-sdk-go/service/ses"
 	appHttp "github.com/craguilar/event-management-service/cmd/http"
+	"github.com/craguilar/event-management-service/internal/app"
 	"github.com/craguilar/event-management-service/internal/app/dynamo"
 )
 
 var db *dynamo.DBConfig
+var emailConfig *app.EmailConfig
 
 func init() {
 	log.Println("Initializing DynamoDB lambda")
@@ -29,6 +31,19 @@ func init() {
 		}
 		db = dynamo.InitDb(dynamodb.New(awsSession), "events")
 	}
+	if emailConfig == nil {
+		region := os.Getenv("AWS_REGION")
+		sesSession, err := session.NewSession(&aws.Config{
+			Region: aws.String(region),
+		})
+		if err != nil {
+			log.Fatalf("Error found %s", err)
+			return
+		}
+		emailConfig = &app.EmailConfig{
+			SesService: ses.New(sesSession),
+		}
+	}
 	log.Println("Initialized lambda ", db.DbService.Endpoint)
 }
 
@@ -41,7 +56,9 @@ func main() {
 	guest := dynamo.NewGuestService(db, authorize)
 	task := dynamo.NewTaskService(db)
 	expense := dynamo.NewExpenseService(db)
-	handler := appHttp.NewServiceHandler(event, guest, task, expense)
+	notification := app.NewEmailNotificationService(emailConfig)
+	actions := dynamo.NewEventActionsService(db, event, task, notification)
+	handler := appHttp.NewServiceHandler(event, actions, guest, task, expense)
 	// Router and Lambda Handler
 	router := appHttp.NewRouter(handler)
 	lambdHandler := NewLambaHandler(router)

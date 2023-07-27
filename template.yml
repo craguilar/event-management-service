@@ -94,7 +94,16 @@ Resources:
             Service: [lambda.amazonaws.com]
           Action: sts:AssumeRole
       Path: /
-      Policies: 
+      Policies:
+        - PolicyName: SesExecution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ses:SendEmail'
+                  - 'ses:SendRawEmail'
+                Resource: '*'       
         - PolicyName: LambdaDynamoExecution
           PolicyDocument:
             Version: "2012-10-17"

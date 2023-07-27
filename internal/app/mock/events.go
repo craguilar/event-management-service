@@ -42,13 +42,18 @@ func (c *EventService) List(user string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
-func (c *EventService) ListBy(EventFilter string) ([]*app.EventSummary, error) {
+// TODO: I need to review if I can pass a predicate filter here.
+func (c *EventService) ListBy(filter func(*app.EventSummary) bool) ([]*app.EventSummary, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
 	list := []*app.EventSummary{}
 	for _, value := range c.db {
-		list = append(list, &app.EventSummary{Id: value.Id, Name: value.Name, MainLocation: value.MainLocation, EventDay: value.EventDay, TimeCreatedOn: value.TimeCreatedOn})
+		summary := &app.EventSummary{Id: value.Id, Name: value.Name, MainLocation: value.MainLocation, EventDay: value.EventDay, TimeCreatedOn: value.TimeCreatedOn}
+		if filter(summary) {
+			list = append(list, summary)
+		}
+
 	}
 	return list, nil
 }
