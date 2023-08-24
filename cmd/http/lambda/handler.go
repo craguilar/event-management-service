@@ -66,7 +66,7 @@ func (h *LambaHandler) InterceptScheduled(scheduled ScheduledRequest) (events.AP
 	headers := map[string]string{"Authorization": "Bearer dummy"}
 	// TODO: Could we do this in a better way ?
 	request := events.APIGatewayProxyRequest{
-		Path:       cmdHttp.BASE_PATH + "/events/actions/notifyPendingTasks",
+		Path:       cmdHttp.TASK_NOTIFICATION,
 		HTTPMethod: "POST",
 		Headers:    headers,
 	}

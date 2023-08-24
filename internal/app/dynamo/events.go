@@ -92,7 +92,12 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 	}
 	list := []*app.EventSummary{}
 	for _, value := range *items {
-		list = append(list, &app.EventSummary{Id: value.EventSummary.Id, Name: value.EventSummary.Name, MainLocation: value.EventSummary.MainLocation, EventDay: value.EventSummary.EventDay, TimeCreatedOn: value.EventSummary.TimeCreatedOn})
+		list = append(list, &app.EventSummary{Id: value.EventSummary.Id,
+			Name:                value.EventSummary.Name,
+			MainLocation:        value.EventSummary.MainLocation,
+			EventDay:            value.EventSummary.EventDay,
+			TimeCreatedOn:       value.EventSummary.TimeCreatedOn,
+			NotificationEnabled: value.EventSummary.NotificationEnabled})
 	}
 	return list, nil
 }
@@ -116,7 +121,7 @@ func (c *EventService) ListBy(filter func(*app.EventSummary) bool) ([]*app.Event
 			return nil, err
 		}
 		event.Id = *aws.String(*value[c.db.PK_ID].S)
-		summary := &app.EventSummary{Id: event.Id, Name: event.Name, MainLocation: event.MainLocation, EventDay: event.EventDay, TimeCreatedOn: event.TimeCreatedOn}
+		summary := event.ToSummary()
 		if filter(summary) {
 			list = append(list, summary)
 		}
@@ -344,13 +349,7 @@ func (c *EventService) CreateOwner(userName string, u *app.EventSharedEmails) (*
 func eventOwner(userName string, event *app.Event) *app.EventOwner {
 
 	return &app.EventOwner{
-		OwnerEmail: userName,
-		EventSummary: &app.EventSummary{
-			Id:            event.Id,
-			Name:          event.Name,
-			MainLocation:  event.MainLocation,
-			EventDay:      event.EventDay,
-			TimeCreatedOn: event.TimeCreatedOn,
-		},
+		OwnerEmail:   userName,
+		EventSummary: event.ToSummary(),
 	}
 }

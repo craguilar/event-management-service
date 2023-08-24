@@ -20,6 +20,10 @@ type Route struct {
 	HandlerFunc http.HandlerFunc
 }
 
+const TASK_NOTIFICATION = BASE_PATH + "/events/actions/notifyPendingTasks"
+
+var TASKS_PATH = []string{TASK_NOTIFICATION}
+
 const BASE_PATH = "/20230125"
 
 func NewRouter(handler *EventServiceHandler) *mux.Router {
@@ -63,7 +67,7 @@ func NewRouter(handler *EventServiceHandler) *mux.Router {
 		}, {
 			"SendPendingTasksNotifications",
 			strings.ToUpper("Post"),
-			BASE_PATH + "/events/actions/notifyPendingTasks",
+			TASK_NOTIFICATION,
 			handler.SendNotifications,
 		},
 		// Guests

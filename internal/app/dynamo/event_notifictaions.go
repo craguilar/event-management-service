@@ -29,7 +29,7 @@ func NewEventActionsService(db *DBConfig, event *EventService, task *TaskService
 
 func (c *EventActions) SendPendingTasksNotifications() error {
 	events, err := c.eventService.ListBy(func(event *app.EventSummary) bool {
-		return event.EventDay.After(time.Now())
+		return event.EventDay.After(time.Now()) && event.NotificationEnabled
 	})
 	if err != nil {
 		return err

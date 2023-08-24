@@ -70,11 +70,12 @@ type Event struct {
 }
 
 type EventSummary struct {
-	Id            string    `json:"id" validate:"required"`
-	Name          string    `json:"name" validate:"required"`
-	MainLocation  string    `json:"mainLocation" validate:"required"`
-	EventDay      time.Time `json:"eventDay" validate:"required"`
-	TimeCreatedOn time.Time `json:"timeCreatedOn"`
+	Id                  string    `json:"id" validate:"required"`
+	Name                string    `json:"name" validate:"required"`
+	MainLocation        string    `json:"mainLocation" validate:"required"`
+	EventDay            time.Time `json:"eventDay" validate:"required"`
+	NotificationEnabled bool      `json:"isNotificationEnabled"`
+	TimeCreatedOn       time.Time `json:"timeCreatedOn"`
 }
 
 type EventOwner struct {
@@ -147,6 +148,17 @@ func (e *Event) Validate() error {
 		e.v = validator.New()
 	}
 	return e.v.Struct(e)
+}
+
+func (e *Event) ToSummary() *EventSummary {
+	return &EventSummary{
+		Id:                  e.Id,
+		Name:                e.Name,
+		MainLocation:        e.MainLocation,
+		EventDay:            e.EventDay,
+		TimeCreatedOn:       e.TimeCreatedOn,
+		NotificationEnabled: e.NotificationEnabled,
+	}
 }
 
 func (e *ExpenseCategory) Validate() error {
