@@ -42,13 +42,13 @@ func (c *EventActions) SendPendingTasksNotifications() error {
 			return err
 		}
 		// Filter by pending tasks
-		pending := make([]*app.Task, len(tasks))
+		pending := make([]*app.Task, 0)
 		for _, task := range tasks {
 			if task.Status == "PENDING" {
 				pending = append(pending, task)
 			}
 		}
-		if len(pending) == 0 {
+		if len(pending) == 0 || pending == nil {
 			continue
 		}
 		template := app.TemplatePendingTasksNotifications(event.Name, pending)
