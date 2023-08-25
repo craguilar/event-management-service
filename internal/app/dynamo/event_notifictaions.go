@@ -41,16 +41,23 @@ func (c *EventActions) SendPendingTasksNotifications() error {
 		if err != nil {
 			return err
 		}
-		if len(tasks) == 0 {
+		// Filter by pending tasks
+		pending := make([]*app.Task, len(tasks))
+		for _, task := range tasks {
+			if task.Status == "PENDING" {
+				pending = append(pending, task)
+			}
+		}
+		if len(pending) == 0 {
 			continue
 		}
-		template := app.TemplatePendingTasksNotifications(event.Name, tasks)
+		template := app.TemplatePendingTasksNotifications(event.Name, pending)
 		// Get owners
 		owners, err := c.eventService.ListOwners(event.Id)
 		if err != nil {
 			return err
 		}
-		log.Printf("Sending notification for %s to %d recipients with %d tasks", event.Name, len(owners.SharedEmails), len(tasks))
+		log.Printf("Sending notification for %s to %d recipients with %d tasks", event.Name, len(owners.SharedEmails), len(pending))
 		for _, toEmail := range owners.SharedEmails {
 			err = c.notificationService.SendEmailNotification(toEmail, "Pending Tasks for "+event.Name, template.String())
 			if err != nil {
