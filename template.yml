@@ -47,7 +47,7 @@ Resources:
         ScheduledEvent:
           Type: ScheduleV2
           Properties:
-            ScheduleExpression: "rate(10 minute)"
+            ScheduleExpression: "cron(0 12 ? * 2  *)"
             RetryPolicy:
               MaximumRetryAttempts: 5
             Input: '{"type": "PENDING_TASKS"}'
