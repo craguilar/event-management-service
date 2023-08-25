@@ -7,49 +7,55 @@ import (
 )
 
 // I had to do this as a quick workaround to embed the content in the final binary :()
-const TEMPLATE = `<!DOCTYPE html>
+const TEMPLATE = `
+<!DOCTYPE html>
 <html>
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bootstrap Look and Feel</title>
-  <!-- Add Bootstrap CSS link -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <title>Pending Tasks</title>
 </head>
 
-<body>
-  <div class="container">
-    <h1 class="mt-4">Pending tasks for {{.EventName}}</h1>
-    <hr class="mb-4">
-    <div class="table-responsive">
-      <table class="table table-bordered">
-        <thead class="thead-dark">
-          <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range .Tasks}}
-          <tr>
-            <td>{{.Name}}</td>
-            <td><span class="badge badge-warning">{{.Status}}</span></td>
-            <td>{{.TimeCreatedOn}}</td>
-          </tr>
-          {{end}}
-        </tbody>
-      </table>
-    </div>
-  </div>
+<body
+  style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif, sans-serif; background-color: #f4f4f4;">
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="600"
+    style="border-collapse: collapse; margin: 20px auto; background-color: #ffffff; border: 1px solid #dddddd; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+    <tr>
+      <td style="padding: 20px; text-align: left; background-color: #9494b8; color: white;">
+        <h1 style="margin: 0;">Pending tasks for {{.EventName}}</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px;">
+        <table border="0" cellpadding="10" cellspacing="0" width="100%">
+          <thead>
+            <tr>
+              <th style="border-bottom: 2px solid #dddddd;">Name</th>
+              <th style="border-bottom: 2px solid #dddddd;">Status</th>
+              <th style="border-bottom: 2px solid #dddddd;">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Tasks}}
+            <tr>
+              <td>{{.Name}}</td>
+              <td style="color: #ffc107; padding: 5px 10px; border-radius: 3px;">{{.Status}}</td>
+              <td><span class="badge badge-warning">{{.Status}}</span></td>
+              <td>{{.TimeCreatedOn}}</td>
+            </tr>
+            {{end}}
+          </tbody>
 
-  <!-- Add Bootstrap JS and Popper.js scripts (optional) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        </table>
+      </td>
+    </tr>
+  </table>
+
 </body>
 
-</html>`
+</html>
+`
 
 type EventTasksTemplate struct {
 	EventName string
