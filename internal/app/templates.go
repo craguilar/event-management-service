@@ -23,7 +23,7 @@ const TEMPLATE = `
     style="border-collapse: collapse; margin: 20px auto; background-color: #ffffff; border: 1px solid #dddddd; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
     <tr>
       <td style="padding: 20px; text-align: left; background-color: #9494b8; color: white;">
-        <h1 style="margin: 0;">Pending tasks for {{.EventName}}</h1>
+        <h1 style="margin: 0;">Pending tasks for: {{.EventName}}</h1>
       </td>
     </tr>
     <tr>
