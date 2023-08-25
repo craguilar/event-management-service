@@ -41,7 +41,6 @@ const TEMPLATE = `
             <tr>
               <td>{{.Name}}</td>
               <td style="color: #ffc107; padding: 5px 10px; border-radius: 3px;">{{.Status}}</td>
-              <td><span class="badge badge-warning">{{.Status}}</span></td>
               <td>{{.TimeCreatedOn}}</td>
             </tr>
             {{end}}
