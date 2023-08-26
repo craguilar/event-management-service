@@ -1,6 +1,10 @@
 package cmd
 
-import "github.com/spf13/viper"
+import (
+	"fmt"
+
+	"github.com/spf13/viper"
+)
 
 var vc *viper.Viper
 
@@ -10,9 +14,9 @@ func loadConfig() {
 	vc.ReadInConfig()
 }
 
-func GetConfig(key string) interface{} {
+func GetConfig(key string) string {
 	if vc == nil {
 		loadConfig()
 	}
-	return vc.Get(key)
+	return fmt.Sprint(vc.Get(key))
 }

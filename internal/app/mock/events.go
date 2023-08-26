@@ -42,7 +42,6 @@ func (c *EventService) List(user string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
-// TODO: I need to review if I can pass a predicate filter here.
 func (c *EventService) ListBy(filter func(*app.EventSummary) bool) ([]*app.EventSummary, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()

@@ -169,7 +169,11 @@ Requires Go version 1.18 - see https://go.dev/blog/vuln
 * [govet](https://golang.org/cmd/vet/) to analyze code for common mistakes
 * [staticcheck](https://staticcheck.io/) to do various static analysis checks
 
-TODO: Planning to add below linters to the build pipeline , not yet implemented
+## ToDo
+
+1. Harden potential abuse of parameters to introduce max size restrictions.
+1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
+1. Planning to add below linters to the build pipeline , not yet implemented
 
 * [errcheck](https://github.com/kisielk/errcheck) to ensure that errors are handled.
 * [golint](https://github.com/golang/lint) to point out common style mistakes
@@ -178,13 +182,6 @@ TODO: Planning to add below linters to the build pipeline , not yet implemented
 errcheck ./...
 golint ./...
 ```
-
-## ToDo
-
-1. Send weekly reminders on pending tasks.
-1. Harden potential abuse of parameters to introduce max size restrictions.
-1. Implement pagination , see scan Limit and ExclusiveStartKey - this looks more like a Cursor basde pagination.
-
 ## References
 
 1. Directory structure mainly based on https://www.gobeyond.dev/packages-as-layers/ , https://www.gobeyond.dev/standard-package-layout/ and  https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091 . Other useful links:   : https://leonardqmarcq.com/posts/go-project-structure-for-api-gateway-lambda-with-aws-sam 

@@ -102,7 +102,6 @@ func (c *EventService) List(userName string) ([]*app.EventSummary, error) {
 	return list, nil
 }
 
-// TODO: I need to review if I can pass a predicate filter here.
 func (c *EventService) ListBy(filter func(*app.EventSummary) bool) ([]*app.EventSummary, error) {
 
 	var scanInput = &dynamodb.ScanInput{
