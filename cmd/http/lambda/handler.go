@@ -49,7 +49,7 @@ func (h *LambaHandler) Handler(raw map[string]interface{}) (events.APIGatewayPro
 	}
 	// Filter only allowed tasks
 	scheduled := ScheduledRequest{}
-	if err := json.Unmarshal(request, &scheduled); err == nil && isScheduled && scheduled.Type != "" {
+	if err := json.Unmarshal(request, &scheduled); err == nil && scheduled.Type != "" {
 		return h.InterceptScheduled(scheduled)
 	}
 	// Non handled code
